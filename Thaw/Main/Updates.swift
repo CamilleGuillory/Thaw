@@ -148,7 +148,7 @@ extension UpdatesManager: @preconcurrency SPUStandardUserDriverDelegate {
             appState.userNotificationManager.addRequest(
                 with: .updateCheck,
                 title: "A new update is available",
-                body: "Version \(update.displayVersionString) is now available"
+                body: "Version \(update.displayVersionString) (\(update.versionString)) is now available"
             )
         }
     }
