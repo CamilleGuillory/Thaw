@@ -1,6 +1,6 @@
 //
 //  IconResource.swift
-//  Ice
+//  Thaw
 //
 
 import SwiftUI
@@ -14,7 +14,6 @@ enum IconResource: Hashable {
     case assetCatalog(_ resource: ImageResource)
 
     /// The view produced by the resource.
-    @ViewBuilder
     var view: some View {
         image
             .resizable()
@@ -24,9 +23,9 @@ enum IconResource: Hashable {
     /// The image produced by the resource.
     private var image: Image {
         switch self {
-        case .systemSymbol(let name):
+        case let .systemSymbol(name):
             Image(systemName: name)
-        case .assetCatalog(let resource):
+        case let .assetCatalog(resource):
             Image(resource)
         }
     }

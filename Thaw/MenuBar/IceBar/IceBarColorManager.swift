@@ -1,6 +1,6 @@
 //
 //  IceBarColorManager.swift
-//  Ice
+//  Thaw
 //
 
 import Combine

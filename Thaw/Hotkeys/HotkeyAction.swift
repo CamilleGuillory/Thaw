@@ -1,6 +1,6 @@
 //
 //  HotkeyAction.swift
-//  Ice
+//  Thaw
 //
 
 enum HotkeyAction: String, Codable, CaseIterable {
@@ -8,7 +8,7 @@ enum HotkeyAction: String, Codable, CaseIterable {
     case toggleHiddenSection = "ToggleHiddenSection"
     case toggleAlwaysHiddenSection = "ToggleAlwaysHiddenSection"
 
-    // Menu Bar Items
+    /// Menu Bar Items
     case searchMenuBarItems = "SearchMenuBarItems"
 
     // Other

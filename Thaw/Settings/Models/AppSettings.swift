@@ -1,6 +1,6 @@
 //
 //  AppSettings.swift
-//  Ice
+//  Thaw
 //
 
 import Combine

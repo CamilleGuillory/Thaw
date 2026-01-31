@@ -1,6 +1,6 @@
 //
 //  OnWindowChange.swift
-//  Ice
+//  Thaw
 //
 
 import SwiftUI
@@ -22,13 +22,13 @@ private struct WindowReaderView: NSViewRepresentable {
 
     var action: (NSWindow?) -> Void
 
-    func makeNSView(context: Context) -> NSView {
+    func makeNSView(context _: Context) -> NSView {
         let view = Represented()
         view.action = action
         return view
     }
 
-    func updateNSView(_: NSView, context: Context) { }
+    func updateNSView(_: NSView, context _: Context) {}
 }
 
 extension View {

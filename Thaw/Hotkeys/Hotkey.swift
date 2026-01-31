@@ -1,6 +1,6 @@
 //
 //  Hotkey.swift
-//  Ice
+//  Thaw
 //
 
 import Combine
@@ -109,14 +109,16 @@ extension Hotkey {
 }
 
 // MARK: Hotkey: Equatable
+
 extension Hotkey: @MainActor Equatable {
     static func == (lhs: Hotkey, rhs: Hotkey) -> Bool {
         lhs.keyCombination == rhs.keyCombination &&
-        lhs.action == rhs.action
+            lhs.action == rhs.action
     }
 }
 
 // MARK: Hotkey: Hashable
+
 extension Hotkey: @MainActor Hashable {
     func hash(into hasher: inout Hasher) {
         hasher.combine(keyCombination)

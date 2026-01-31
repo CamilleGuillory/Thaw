@@ -1,6 +1,6 @@
 //
 //  EventMonitor.swift
-//  Ice
+//  Thaw
 //
 
 import Cocoa
@@ -166,17 +166,17 @@ struct EventMonitor: Sendable {
 
         func start() {
             switch self {
-            case .local(let state): state.start()
-            case .global(let state): state.start()
-            case .universal(let state): state.start()
+            case let .local(state): state.start()
+            case let .global(state): state.start()
+            case let .universal(state): state.start()
             }
         }
 
         func stop() {
             switch self {
-            case .local(let state): state.stop()
-            case .global(let state): state.stop()
-            case .universal(let state): state.stop()
+            case let .local(state): state.stop()
+            case let .global(state): state.stop()
+            case let .universal(state): state.stop()
             }
         }
     }
@@ -386,7 +386,7 @@ extension EventMonitor.EventPublisher {
             }
         }
 
-        func request(_ demand: Subscribers.Demand) { }
+        func request(_: Subscribers.Demand) {}
 
         func cancel() {
             box = nil

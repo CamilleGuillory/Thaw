@@ -1,6 +1,6 @@
 //
 //  HotkeyRegistry.swift
-//  Ice
+//  Thaw
 //
 
 import Carbon.HIToolbox
@@ -53,7 +53,7 @@ final class HotkeyRegistry {
         }
     }
 
-    private let signature = OSType(1231250720) // OSType for Ice
+    private let signature = OSType(1_231_250_720) // OSType for Ice
 
     private var eventHandlerRef: EventHandlerRef?
 

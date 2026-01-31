@@ -1,6 +1,6 @@
 //
 //  MenuBarLayoutSettingsPane.swift
-//  Ice
+//  Thaw
 //
 
 import SwiftUI
@@ -26,7 +26,6 @@ struct MenuBarLayoutSettingsPane: View {
         }
     }
 
-    @ViewBuilder
     private var header: some View {
         IceSection {
             VStack(spacing: 3) {
@@ -40,7 +39,6 @@ struct MenuBarLayoutSettingsPane: View {
         }
     }
 
-    @ViewBuilder
     private var layoutBars: some View {
         VStack(spacing: 20) {
             ForEach(MenuBarSection.Name.allCases, id: \.self) { section in
@@ -57,14 +55,12 @@ struct MenuBarLayoutSettingsPane: View {
         }
     }
 
-    @ViewBuilder
     private var cannotArrange: some View {
         Text("\(Constants.displayName) cannot arrange menu bar items in automatically hidden menu bars.")
             .font(.title3)
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
     }
 
-    @ViewBuilder
     private var missingScreenRecordingPermissions: some View {
         VStack {
             Text("Menu bar layout requires screen recording permissions.")
@@ -79,7 +75,6 @@ struct MenuBarLayoutSettingsPane: View {
         }
     }
 
-    @ViewBuilder
     private var loadingMenuBarItems: some View {
         VStack {
             Text("Loading menu bar items…")

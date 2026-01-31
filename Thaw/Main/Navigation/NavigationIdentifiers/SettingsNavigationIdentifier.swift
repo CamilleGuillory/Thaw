@@ -1,6 +1,6 @@
 //
 //  SettingsNavigationIdentifier.swift
-//  Ice
+//  Thaw
 //
 
 /// The navigation identifier type for the "Settings" interface.

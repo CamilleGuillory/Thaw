@@ -1,6 +1,6 @@
 //
 //  IceWindow.swift
-//  Ice
+//  Thaw
 //
 
 import SwiftUI
@@ -41,7 +41,6 @@ struct IceWindow<Content: View>: Scene {
         }
     }
 
-    @ViewBuilder
     private var windowContentView: some View {
         content.onWindowChange { window in
             window?.collectionBehavior.insert(.moveToActiveSpace)

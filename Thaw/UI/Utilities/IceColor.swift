@@ -1,6 +1,6 @@
 //
 //  IceColor.swift
-//  Ice
+//  Thaw
 //
 
 import CoreGraphics
@@ -13,6 +13,7 @@ struct IceColor: Hashable {
 }
 
 // MARK: IceColor: Codable
+
 extension IceColor: Codable {
     private enum CodingKeys: CodingKey {
         case components

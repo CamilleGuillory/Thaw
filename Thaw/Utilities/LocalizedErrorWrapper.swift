@@ -1,6 +1,6 @@
 //
 //  LocalizedErrorWrapper.swift
-//  Ice
+//  Thaw
 //
 
 import Foundation

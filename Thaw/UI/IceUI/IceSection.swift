@@ -1,6 +1,6 @@
 //
 //  IceSection.swift
-//  Ice
+//  Thaw
 //
 
 import SwiftUI
@@ -22,8 +22,13 @@ struct IceSection<Header: View, Content: View, Footer: View>: View {
     private let spacing: CGFloat
     private let options: IceSectionOptions
 
-    private var isBordered: Bool { options.contains(.isBordered) }
-    private var hasDividers: Bool { options.contains(.hasDividers) }
+    private var isBordered: Bool {
+        options.contains(.isBordered)
+    }
+
+    private var hasDividers: Bool {
+        options.contains(.hasDividers)
+    }
 
     init(
         spacing: CGFloat = .iceSectionDefaultSpacing,

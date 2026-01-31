@@ -1,6 +1,6 @@
 //
 //  Updates.swift
-//  Ice
+//  Thaw
 //
 
 import Sparkle
@@ -83,18 +83,18 @@ final class UpdatesManager: NSObject, ObservableObject {
     /// Checks for app updates.
     @objc func checkForUpdates() {
         #if DEBUG
-        // Checking for updates hangs in debug mode.
-        let alert = NSAlert()
-        alert.messageText = "Checking for updates is not supported in debug mode."
-        alert.runModal()
+            // Checking for updates hangs in debug mode.
+            let alert = NSAlert()
+            alert.messageText = "Checking for updates is not supported in debug mode."
+            alert.runModal()
         #else
-        guard let appState else {
-            return
-        }
-        // Activate the app in case an alert needs to be displayed.
-        appState.activate(withPolicy: .regular)
-        appState.openWindow(.settings)
-        updater.checkForUpdates()
+            guard let appState else {
+                return
+            }
+            // Activate the app in case an alert needs to be displayed.
+            appState.activate(withPolicy: .regular)
+            appState.openWindow(.settings)
+            updater.checkForUpdates()
         #endif
     }
 }
@@ -103,14 +103,14 @@ final class UpdatesManager: NSObject, ObservableObject {
 
 extension UpdatesManager: @preconcurrency SPUUpdaterDelegate {
     /// Determines which update channels are allowed.
-    func allowedChannels(for updater: SPUUpdater) -> Set<String> {
+    func allowedChannels(for _: SPUUpdater) -> Set<String> {
         if UserDefaults.standard.bool(forKey: "AllowsBetaUpdates") {
             return ["beta"]
         }
         return []
     }
 
-    func updater(_ updater: SPUUpdater, willScheduleUpdateCheckAfterDelay delay: TimeInterval) {
+    func updater(_: SPUUpdater, willScheduleUpdateCheckAfterDelay _: TimeInterval) {
         guard let appState else {
             return
         }
@@ -126,7 +126,7 @@ extension UpdatesManager: @preconcurrency SPUStandardUserDriverDelegate {
     }
 
     func standardUserDriverShouldHandleShowingScheduledUpdate(
-        _ update: SUAppcastItem,
+        _: SUAppcastItem,
         andInImmediateFocus immediateFocus: Bool
     ) -> Bool {
         if NSApp.isActive {
@@ -137,7 +137,7 @@ extension UpdatesManager: @preconcurrency SPUStandardUserDriverDelegate {
     }
 
     func standardUserDriverWillHandleShowingUpdate(
-        _ handleShowingUpdate: Bool,
+        _: Bool,
         forUpdate update: SUAppcastItem,
         state: SPUUserUpdateState
     ) {
@@ -153,7 +153,7 @@ extension UpdatesManager: @preconcurrency SPUStandardUserDriverDelegate {
         }
     }
 
-    func standardUserDriverDidReceiveUserAttention(forUpdate update: SUAppcastItem) {
+    func standardUserDriverDidReceiveUserAttention(forUpdate _: SUAppcastItem) {
         guard let appState else {
             return
         }

@@ -1,6 +1,6 @@
 //
 //  IceBar.swift
-//  Ice
+//  Thaw
 //
 
 import Combine
@@ -109,7 +109,7 @@ final class IceBarPanel: NSPanel {
                     return originForRightOfScreen
                 }
 
-                return CGPoint(x: (location.x - frame.width / 2).clamped(to: lowerBound...upperBound), y: originY)
+                return CGPoint(x: (location.x - frame.width / 2).clamped(to: lowerBound ... upperBound), y: originY)
             case .iceIcon:
                 let lowerBound = screen.frame.minX
                 let upperBound = screen.frame.maxX - frame.width
@@ -124,7 +124,7 @@ final class IceBarPanel: NSPanel {
                     return originForRightOfScreen
                 }
 
-                return CGPoint(x: (itemBounds.midX - frame.width / 2).clamped(to: lowerBound...upperBound), y: originY)
+                return CGPoint(x: (itemBounds.midX - frame.width / 2).clamped(to: lowerBound ... upperBound), y: originY)
             }
         }
 
@@ -222,16 +222,16 @@ private final class IceBarHostingView: NSHostingView<IceBarContentView> {
     }
 
     @available(*, unavailable)
-    required init?(coder: NSCoder) {
+    required init?(coder _: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
 
     @available(*, unavailable)
-    required init(rootView: IceBarContentView) {
+    required init(rootView _: IceBarContentView) {
         fatalError("init(rootView:) has not been implemented")
     }
 
-    override func acceptsFirstMouse(for event: NSEvent?) -> Bool {
+    override func acceptsFirstMouse(for _: NSEvent?) -> Bool {
         return true
     }
 }
@@ -469,7 +469,7 @@ private struct IceBarItemClickView: NSViewRepresentable {
         }
 
         @available(*, unavailable)
-        required init?(coder: NSCoder) {
+        required init?(coder _: NSCoder) {
             fatalError("init(coder:) has not been implemented")
         }
 
@@ -513,7 +513,7 @@ private struct IceBarItemClickView: NSViewRepresentable {
     let leftClickAction: () -> Void
     let rightClickAction: () -> Void
 
-    func makeNSView(context: Context) -> NSView {
+    func makeNSView(context _: Context) -> NSView {
         Represented(
             item: item,
             leftClickAction: leftClickAction,
@@ -521,5 +521,5 @@ private struct IceBarItemClickView: NSViewRepresentable {
         )
     }
 
-    func updateNSView(_ nsView: NSView, context: Context) {}
+    func updateNSView(_: NSView, context _: Context) {}
 }

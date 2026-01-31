@@ -1,6 +1,6 @@
 //
 //  MenuBarItemSpacingManager.swift
-//  Ice
+//  Thaw
 //
 
 import Cocoa
@@ -202,7 +202,7 @@ final class MenuBarItemSpacingManager {
             for pid in pids {
                 guard
                     let app = NSRunningApplication(processIdentifier: pid),
-                    app.bundleIdentifier != "com.apple.controlcenter",  // ControlCenter handles its own relaunch, so skip it.
+                    app.bundleIdentifier != "com.apple.controlcenter", // ControlCenter handles its own relaunch, so skip it.
                     app != .current
                 else {
                     break
@@ -221,7 +221,7 @@ final class MenuBarItemSpacingManager {
                                     withBundleIdentifier: "com.apple.Spotlight"
                                 ).first,
                                 latestSpotlightInstance.processIdentifier
-                                    == app.processIdentifier
+                                == app.processIdentifier
                             {
                                 failedApps.append(name)
                             }
@@ -253,9 +253,9 @@ final class MenuBarItemSpacingManager {
     }
 }
 
-extension NSRunningApplication {
+private extension NSRunningApplication {
     /// A string to use for logging purposes.
-    fileprivate var logString: String {
+    var logString: String {
         localizedName ?? bundleIdentifier ?? "<NIL>"
     }
 }

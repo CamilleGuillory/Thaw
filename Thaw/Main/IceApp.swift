@@ -1,6 +1,6 @@
 //
 //  IceApp.swift
-//  Ice
+//  Thaw
 //
 
 import SwiftUI

@@ -1,6 +1,6 @@
 //
 //  HotkeysSettings.swift
-//  Ice
+//  Thaw
 //
 
 import Combine
@@ -71,7 +71,7 @@ final class HotkeysSettings: ObservableObject {
                 .encode(encoder: encoder)
                 .receive(on: DispatchQueue.main)
                 .sink { completion in
-                    if case .failure(let error) = completion {
+                    if case let .failure(error) = completion {
                         Logger.serialization.error("Error encoding hotkey: \(error, privacy: .public)")
                     }
                 } receiveValue: { data in

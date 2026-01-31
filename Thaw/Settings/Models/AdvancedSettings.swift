@@ -1,6 +1,6 @@
 //
 //  AdvancedSettings.swift
-//  Ice
+//  Thaw
 //
 
 import Combine
@@ -128,7 +128,9 @@ enum SectionDividerStyle: Int, CaseIterable, Identifiable {
     case noDivider = 0
     case chevron = 1
 
-    var id: Int { rawValue }
+    var id: Int {
+        rawValue
+    }
 
     /// Localized string key representation.
     var localized: LocalizedStringKey {

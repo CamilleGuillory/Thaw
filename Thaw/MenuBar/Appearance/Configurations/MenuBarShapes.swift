@@ -1,6 +1,6 @@
 //
 //  MenuBarShapes.swift
-//  Ice
+//  Thaw
 //
 
 import SwiftUI
@@ -23,7 +23,9 @@ enum MenuBarShapeKind: Int, CaseIterable, Codable, Identifiable {
     /// and trailing sides.
     case split = 2
 
-    var id: Int { rawValue }
+    var id: Int {
+        rawValue
+    }
 
     /// Localized string key representation.
     var localized: LocalizedStringKey {

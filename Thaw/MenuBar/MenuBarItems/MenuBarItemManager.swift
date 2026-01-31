@@ -1,6 +1,6 @@
 //
 //  MenuBarItemManager.swift
-//  Ice
+//  Thaw
 //
 
 import Cocoa

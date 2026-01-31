@@ -1,6 +1,6 @@
 //
 //  LayoutBarContainer.swift
-//  Ice
+//  Thaw
 //
 
 import Cocoa
@@ -71,7 +71,7 @@ final class LayoutBarContainer: NSView {
     }
 
     @available(*, unavailable)
-    required init?(coder: NSCoder) {
+    required init?(coder _: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
 
@@ -251,7 +251,7 @@ final class LayoutBarContainer: NSView {
             // view to trigger a swap
             let midX = destinationView.frame.midX
             let offset = destinationView.frame.width / 2
-            if !((midX - offset)...(midX + offset)).contains(draggingLocation.x) {
+            if !((midX - offset) ... (midX + offset)).contains(draggingLocation.x) {
                 if sourceView.oldContainerInfo?.container === self {
                     return .move
                 }

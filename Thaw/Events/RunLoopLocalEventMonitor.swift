@@ -1,6 +1,6 @@
 //
 //  RunLoopLocalEventMonitor.swift
-//  Ice
+//  Thaw
 //
 
 import Cocoa
@@ -117,7 +117,7 @@ extension RunLoopLocalEventMonitor.RunLoopLocalEventPublisher {
             self.monitor.start()
         }
 
-        func request(_ demand: Subscribers.Demand) { }
+        func request(_: Subscribers.Demand) {}
 
         func cancel() {
             monitor.stop()

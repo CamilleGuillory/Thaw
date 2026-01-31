@@ -1,6 +1,6 @@
 //
 //  HIDEventManager.swift
-//  Ice
+//  Thaw
 //
 
 import Cocoa
@@ -106,7 +106,7 @@ final class HIDEventManager: ObservableObject {
             return event
         }
 
-        /// Throttling: Only process every 5th event to reduce CPU usage.
+        // Throttling: Only process every 5th event to reduce CPU usage.
         enum Context {
             static var eventCount = 0
         }
@@ -533,7 +533,7 @@ extension HIDEventManager {
 
     /// A Boolean value that indicates whether the mouse pointer is within
     /// the bounds of the menu bar.
-    func isMouseInsideMenuBar(appState: AppState, screen: NSScreen) -> Bool {
+    func isMouseInsideMenuBar(appState _: AppState, screen: NSScreen) -> Bool {
         guard
             let mouseLocation = MouseHelpers.locationAppKit,
             let menuBarHeight = screen.getMenuBarHeight()
@@ -550,7 +550,7 @@ extension HIDEventManager {
 
     /// A Boolean value that indicates whether the mouse pointer is within
     /// the bounds of the current application menu.
-    func isMouseInsideApplicationMenu(appState: AppState, screen: NSScreen)
+    func isMouseInsideApplicationMenu(appState _: AppState, screen: NSScreen)
         -> Bool
     {
         guard
@@ -567,7 +567,7 @@ extension HIDEventManager {
 
     /// A Boolean value that indicates whether the mouse pointer is within
     /// the bounds of a menu bar item.
-    func isMouseInsideMenuBarItem(appState: AppState, screen: NSScreen) -> Bool {
+    func isMouseInsideMenuBarItem(appState _: AppState, screen _: NSScreen) -> Bool {
         guard let mouseLocation = MouseHelpers.locationCoreGraphics else {
             return false
         }
@@ -599,7 +599,7 @@ extension HIDEventManager {
     /// the bounds of the screen's notch, if it has one.
     ///
     /// If the screen does not have a notch, this property returns `false`.
-    func isMouseInsideNotch(appState: AppState, screen: NSScreen) -> Bool {
+    func isMouseInsideNotch(appState _: AppState, screen: NSScreen) -> Bool {
         guard
             let mouseLocation = MouseHelpers.locationAppKit,
             var frameOfNotch = screen.frameOfNotch
@@ -615,7 +615,7 @@ extension HIDEventManager {
     func isMouseInsideEmptyMenuBarSpace(appState: AppState, screen: NSScreen)
         -> Bool
     {
-        /// Perform cheap geometric checks first.
+        // Perform cheap geometric checks first.
         guard
             isMouseInsideMenuBar(appState: appState, screen: screen),
             !isMouseInsideNotch(appState: appState, screen: screen)
@@ -623,7 +623,7 @@ extension HIDEventManager {
             return false
         }
 
-        /// Then perform expensive Window Server checks.
+        // Then perform expensive Window Server checks.
         return !isMouseInsideApplicationMenu(appState: appState, screen: screen)
             && !isMouseInsideMenuBarItem(appState: appState, screen: screen)
     }

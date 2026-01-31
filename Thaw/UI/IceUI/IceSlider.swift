@@ -1,6 +1,6 @@
 //
 //  IceSlider.swift
-//  Ice
+//  Thaw
 //
 
 import CompactSlider

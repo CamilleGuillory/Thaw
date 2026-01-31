@@ -1,6 +1,6 @@
 //
 //  MenuBarAppearanceManager.swift
-//  Ice
+//  Thaw
 //
 
 import Cocoa
@@ -76,7 +76,7 @@ final class MenuBarAppearanceManager: ObservableObject {
             .encode(encoder: encoder)
             .receive(on: DispatchQueue.main)
             .sink { completion in
-                if case .failure(let error) = completion {
+                if case let .failure(error) = completion {
                     Logger.serialization.error("Error encoding menu bar appearance configuration: \(error)")
                 }
             } receiveValue: { data in

@@ -1,6 +1,6 @@
 //
 //  MenuBarOverlayPanel.swift
-//  Ice
+//  Thaw
 //
 
 import Cocoa
@@ -16,7 +16,9 @@ final class MenuBarOverlayPanel: NSPanel {
         case applicationMenuFrame
         case desktopWallpaper
 
-        var description: String { rawValue }
+        var description: String {
+            rawValue
+        }
     }
 
     /// The kind of validation that occurs before an update.
@@ -204,7 +206,7 @@ final class MenuBarOverlayPanel: NSPanel {
                 for: .applicationMenuFrame,
                 timeout: .seconds(10)
             ) { [weak self] in
-                for _ in 0..<10 {
+                for _ in 0 ..< 10 {
                     try Task.checkCancellation()
                     guard let self else { return }
                     if let latestFrame = self.owningScreen
@@ -392,8 +394,7 @@ final class MenuBarOverlayPanel: NSPanel {
             screenBounds: menuBarWindow.bounds,
             option: .nominalResolution
         )
-        if desktopWallpaper?.dataProvider?.data != wallpaper?.dataProvider?.data
-        {
+        if desktopWallpaper?.dataProvider?.data != wallpaper?.dataProvider?.data {
             desktopWallpaper = wallpaper
         }
     }
@@ -796,7 +797,7 @@ private final class MenuBarOverlayPanelContentView: NSView {
         }
     }
 
-    override func draw(_ dirtyRect: NSRect) {
+    override func draw(_: NSRect) {
         guard
             let overlayPanel,
             let context = NSGraphicsContext.current
@@ -904,7 +905,7 @@ private final class MenuBarOverlayPanelContentView: NSView {
             }
 
             if hasBorder,
-                let borderColor = NSColor(cgColor: configuration.borderColor)
+               let borderColor = NSColor(cgColor: configuration.borderColor)
             {
                 context.saveGraphicsState()
                 defer {

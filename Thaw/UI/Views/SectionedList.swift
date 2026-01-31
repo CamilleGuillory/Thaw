@@ -1,6 +1,6 @@
 //
 //  SectionedList.swift
-//  Ice
+//  Thaw
 //
 
 import SwiftUI
@@ -61,7 +61,6 @@ struct SectionedList<ItemID: Hashable>: View {
         }
     }
 
-    @ViewBuilder
     private var scrollView: some View {
         ScrollViewReader { scrollView in
             GeometryReader { geometry in
@@ -98,7 +97,6 @@ struct SectionedList<ItemID: Hashable>: View {
         }
     }
 
-    @ViewBuilder
     private func scrollContent(scrollView: ScrollViewProxy, geometry: GeometryProxy) -> some View {
         VStack(spacing: spacing) {
             ForEach(items, id: \.id) { item in
@@ -141,6 +139,7 @@ struct SectionedList<ItemID: Hashable>: View {
 }
 
 // MARK: SectionedList Content Padding
+
 extension SectionedList {
     /// Sets the padding of the sectioned list's content.
     func contentPadding(_ insets: EdgeInsets) -> SectionedList {

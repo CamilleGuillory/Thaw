@@ -1,6 +1,6 @@
 //
 //  GeneralSettings.swift
-//  Ice
+//  Thaw
 //
 
 import Combine
@@ -232,7 +232,9 @@ enum RehideStrategy: Int, CaseIterable, Identifiable {
     /// Menu bar items are rehidden when the focused app changes.
     case focusedApp = 2
 
-    var id: Int { rawValue }
+    var id: Int {
+        rawValue
+    }
 
     /// Localized string key representation.
     var localized: LocalizedStringKey {

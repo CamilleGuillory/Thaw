@@ -1,6 +1,6 @@
 //
 //  IceGradient.swift
-//  Ice
+//  Thaw
 //
 
 import SwiftUI
@@ -161,6 +161,7 @@ struct IceGradient: Codable, Hashable {
 }
 
 // MARK: IceGradient Static Members
+
 extension IceGradient {
     /// The default menu bar tint gradient.
     static let defaultMenuBarTint = IceGradient(stops: [
@@ -210,6 +211,7 @@ extension IceGradient {
 }
 
 // MARK: IceGradient.ColorStop: Codable
+
 extension IceGradient.ColorStop: Codable {
     private enum CodingKeys: CodingKey {
         case color

@@ -1,6 +1,6 @@
 //
 //  UserNotificationManager.swift
-//  Ice
+//  Thaw
 //
 
 import OSLog
@@ -13,7 +13,9 @@ final class UserNotificationManager: NSObject {
     private(set) weak var appState: AppState?
 
     /// The current notification center.
-    var notificationCenter: UNUserNotificationCenter { .current() }
+    var notificationCenter: UNUserNotificationCenter {
+        .current()
+    }
 
     /// Performs the initial setup of the manager.
     func performSetup(with appState: AppState) {
@@ -54,9 +56,10 @@ final class UserNotificationManager: NSObject {
 }
 
 // MARK: UserNotificationManager: UNUserNotificationCenterDelegate
+
 extension UserNotificationManager: @preconcurrency UNUserNotificationCenterDelegate {
     func userNotificationCenter(
-        _ center: UNUserNotificationCenter,
+        _: UNUserNotificationCenter,
         didReceive response: UNNotificationResponse,
         withCompletionHandler completionHandler: @escaping () -> Void
     ) {

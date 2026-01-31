@@ -1,10 +1,10 @@
 //
 //  Permission.swift
-//  Ice
+//  Thaw
 //
 
-import Combine
 import Cocoa
+import Combine
 
 // MARK: - Permission
 

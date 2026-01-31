@@ -1,6 +1,6 @@
 //
 //  AboutSettingsPane.swift
-//  Ice
+//  Thaw
 //
 
 import SwiftUI

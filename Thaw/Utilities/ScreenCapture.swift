@@ -1,6 +1,6 @@
 //
 //  ScreenCapture.swift
-//  Ice
+//  Thaw
 //
 
 import CoreGraphics
@@ -9,7 +9,6 @@ import ScreenCaptureKit
 
 /// A namespace for screen capture operations.
 enum ScreenCapture {
-
     // MARK: Permissions
 
     /// Returns a Boolean value that indicates whether the app has screen

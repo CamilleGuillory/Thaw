@@ -1,6 +1,6 @@
 //
 //  MenuBarSearchPanel.swift
-//  Ice
+//  Thaw
 //
 
 import Combine
@@ -272,7 +272,7 @@ private final class MenuBarSearchHostingView: NSHostingView<AnyView> {
     init(
         appState: AppState,
         model: MenuBarSearchModel,
-        displayID: CGDirectDisplayID,
+        displayID _: CGDirectDisplayID,
         panel: MenuBarSearchPanel
     ) {
         super.init(
@@ -287,12 +287,12 @@ private final class MenuBarSearchHostingView: NSHostingView<AnyView> {
     }
 
     @available(*, unavailable)
-    required init?(coder: NSCoder) {
+    required init?(coder _: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
 
     @available(*, unavailable)
-    required init(rootView: AnyView) {
+    required init(rootView _: AnyView) {
         fatalError("init(rootView:) has not been implemented")
     }
 }
@@ -478,7 +478,7 @@ private struct MenuBarSearchContentView: View {
         -> MenuBarItem?
     {
         switch selection {
-        case .item(let tag):
+        case let .item(tag):
             return itemManager.itemCache.managedItems.first(matching: tag)
         case .header:
             return nil

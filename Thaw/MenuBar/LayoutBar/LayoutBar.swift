@@ -1,6 +1,6 @@
 //
 //  LayoutBar.swift
-//  Ice
+//  Thaw
 //
 
 import SwiftUI
@@ -10,11 +10,11 @@ struct LayoutBar: View {
         let appState: AppState
         let section: MenuBarSection.Name
 
-        func makeNSView(context: Context) -> LayoutBarScrollView {
+        func makeNSView(context _: Context) -> LayoutBarScrollView {
             LayoutBarScrollView(appState: appState, section: section)
         }
 
-        func updateNSView(_ nsView: LayoutBarScrollView, context: Context) { }
+        func updateNSView(_: LayoutBarScrollView, context _: Context) {}
     }
 
     @EnvironmentObject var appState: AppState

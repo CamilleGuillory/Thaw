@@ -1,6 +1,6 @@
 //
 //  MenuBarItem.swift
-//  Ice
+//  Thaw
 //
 
 import Cocoa
@@ -283,19 +283,21 @@ extension MenuBarItem {
 }
 
 // MARK: MenuBarItem: Equatable
+
 extension MenuBarItem: Equatable {
     static func == (lhs: MenuBarItem, rhs: MenuBarItem) -> Bool {
         lhs.tag == rhs.tag &&
-        lhs.windowID == rhs.windowID &&
-        lhs.ownerPID == rhs.ownerPID &&
-        lhs.sourcePID == rhs.sourcePID &&
-        NSStringFromRect(lhs.bounds) == NSStringFromRect(rhs.bounds) &&
-        lhs.title == rhs.title &&
-        lhs.isOnScreen == rhs.isOnScreen
+            lhs.windowID == rhs.windowID &&
+            lhs.ownerPID == rhs.ownerPID &&
+            lhs.sourcePID == rhs.sourcePID &&
+            NSStringFromRect(lhs.bounds) == NSStringFromRect(rhs.bounds) &&
+            lhs.title == rhs.title &&
+            lhs.isOnScreen == rhs.isOnScreen
     }
 }
 
 // MARK: MenuBarItem: Hashable
+
 extension MenuBarItem: Hashable {
     func hash(into hasher: inout Hasher) {
         hasher.combine(tag)

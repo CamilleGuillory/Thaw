@@ -1,6 +1,6 @@
 //
 //  MenuBarAppearanceConfigurationV1.swift
-//  Ice
+//  Thaw
 //
 
 import CoreGraphics
@@ -94,6 +94,7 @@ struct MenuBarAppearanceConfigurationV1: Hashable {
 }
 
 // MARK: Default Configuration
+
 extension MenuBarAppearanceConfigurationV1 {
     static let defaultConfiguration = MenuBarAppearanceConfigurationV1(
         hasShadow: false,
@@ -111,6 +112,7 @@ extension MenuBarAppearanceConfigurationV1 {
 }
 
 // MARK: MenuBarAppearanceConfigurationV1: Codable
+
 extension MenuBarAppearanceConfigurationV1: Codable {
     private enum CodingKeys: CodingKey {
         case hasShadow

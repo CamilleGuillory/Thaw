@@ -1,6 +1,6 @@
 //
 //  ControlItemImageSet.swift
-//  Ice
+//  Thaw
 //
 
 /// A named set of images that are used by control items.
@@ -22,7 +22,9 @@ struct ControlItemImageSet: Codable, Hashable, Identifiable {
     let hidden: ControlItemImage
     let visible: ControlItemImage
 
-    var id: Int { hashValue }
+    var id: Int {
+        hashValue
+    }
 
     init(name: Name, hidden: ControlItemImage, visible: ControlItemImage) {
         self.name = name

@@ -1,6 +1,6 @@
 //
 //  PermissionsView.swift
-//  Ice
+//  Thaw
 //
 
 import SwiftUI
@@ -43,7 +43,6 @@ struct PermissionsView: View {
         .fixedSize()
     }
 
-    @ViewBuilder
     private var headerView: some View {
         Label {
             Text("Permissions")
@@ -58,7 +57,6 @@ struct PermissionsView: View {
         }
     }
 
-    @ViewBuilder
     private var explanationBox: some View {
         IceSection {
             VStack {
@@ -73,7 +71,6 @@ struct PermissionsView: View {
         .font(.title3)
     }
 
-    @ViewBuilder
     private var permissionsStack: some View {
         VStack {
             explanationBox
@@ -83,7 +80,6 @@ struct PermissionsView: View {
         }
     }
 
-    @ViewBuilder
     private var footerView: some View {
         HStack {
             quitButton
@@ -92,7 +88,6 @@ struct PermissionsView: View {
         .controlSize(.large)
     }
 
-    @ViewBuilder
     private var quitButton: some View {
         Button {
             NSApp.terminate(nil)
@@ -102,7 +97,6 @@ struct PermissionsView: View {
         }
     }
 
-    @ViewBuilder
     private var continueButton: some View {
         Button {
             appState.dismissWindow(.permissions)
@@ -126,7 +120,6 @@ struct PermissionsView: View {
         .disabled(manager.permissionsState == .missing)
     }
 
-    @ViewBuilder
     private func permissionBox(_ permission: Permission) -> some View {
         IceSection {
             VStack(spacing: 12) {

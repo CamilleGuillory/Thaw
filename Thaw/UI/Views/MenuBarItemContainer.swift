@@ -1,6 +1,6 @@
 //
 //  MenuBarItemContainer.swift
-//  Ice
+//  Thaw
 //
 
 import SwiftUI
@@ -27,7 +27,7 @@ struct MenuBarItemContainer<Content: View>: View {
         switch accessor {
         case .automatic:
             menuBarManager.averageColorInfo
-        case .manual(let colorInfo):
+        case let .manual(colorInfo):
             colorInfo
         }
     }

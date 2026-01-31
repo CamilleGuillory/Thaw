@@ -1,6 +1,6 @@
 //
 //  MenuBarItemServiceConnection.swift
-//  Ice
+//  Thaw
 //
 
 import Foundation
@@ -64,7 +64,7 @@ extension MenuBarItemService {
                     continuation.resume(returning: nil)
                     return
                 }
-                if case .sourcePID(let pid) = response {
+                if case let .sourcePID(pid) = response {
                     continuation.resume(returning: pid)
                 } else {
                     logger.error("Source PID request returned invalid response \(String(describing: response))")

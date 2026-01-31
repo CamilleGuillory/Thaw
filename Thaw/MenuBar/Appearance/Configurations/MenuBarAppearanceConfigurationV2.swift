@@ -1,6 +1,6 @@
 //
 //  MenuBarAppearanceConfigurationV2.swift
-//  Ice
+//  Thaw
 //
 
 import SwiftUI
@@ -36,6 +36,7 @@ struct MenuBarAppearanceConfigurationV2: Hashable {
 }
 
 // MARK: Default Configuration
+
 extension MenuBarAppearanceConfigurationV2 {
     static let defaultConfiguration = MenuBarAppearanceConfigurationV2(
         lightModeConfiguration: .defaultConfiguration,
@@ -101,6 +102,7 @@ struct MenuBarAppearancePartialConfiguration: Hashable {
 }
 
 // MARK: Default Partial Configuration
+
 extension MenuBarAppearancePartialConfiguration {
     static let defaultConfiguration = MenuBarAppearancePartialConfiguration(
         hasShadow: false,
@@ -114,6 +116,7 @@ extension MenuBarAppearancePartialConfiguration {
 }
 
 // MARK: MenuBarAppearancePartialConfiguration: Codable
+
 extension MenuBarAppearancePartialConfiguration: Codable {
     private enum CodingKeys: CodingKey {
         case hasShadow

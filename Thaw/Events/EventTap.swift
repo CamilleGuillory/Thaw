@@ -1,6 +1,6 @@
 //
 //  EventTap.swift
-//  Ice
+//  Thaw
 //
 
 import Cocoa
@@ -63,7 +63,7 @@ final class EventTap {
             case .hidEventTap: "HID event tap"
             case .sessionEventTap: "session event tap"
             case .annotatedSessionEventTap: "annotated session event tap"
-            case .pid(let pid): "PID \(pid)"
+            case let .pid(pid): "PID \(pid)"
             }
         }
     }
@@ -279,7 +279,7 @@ final class EventTap {
             return createMachPort(at: .cgSessionEventTap)
         case .annotatedSessionEventTap:
             return createMachPort(at: .cgAnnotatedSessionEventTap)
-        case .pid(let pid):
+        case let .pid(pid):
             return createMachPort(for: pid)
         }
     }

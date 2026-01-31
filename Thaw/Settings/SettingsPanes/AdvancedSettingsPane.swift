@@ -1,6 +1,6 @@
 //
 //  AdvancedSettingsPane.swift
-//  Ice
+//  Thaw
 //
 
 import SwiftUI
@@ -42,7 +42,6 @@ struct AdvancedSettingsPane: View {
         }
     }
 
-    @ViewBuilder
     private var enableAlwaysHiddenSection: some View {
         Toggle(
             "Enable the always-hidden section",
@@ -50,7 +49,6 @@ struct AdvancedSettingsPane: View {
         )
     }
 
-    @ViewBuilder
     private var showAllSectionsOnUserDrag: some View {
         Toggle(
             "Show all sections when ⌘ Command + dragging menu bar items",
@@ -58,7 +56,6 @@ struct AdvancedSettingsPane: View {
         )
     }
 
-    @ViewBuilder
     private var sectionDividerStyle: some View {
         IcePicker("Section divider style", selection: $settings.sectionDividerStyle) {
             ForEach(SectionDividerStyle.allCases) { style in
@@ -67,7 +64,6 @@ struct AdvancedSettingsPane: View {
         }
     }
 
-    @ViewBuilder
     private var hideApplicationMenus: some View {
         Toggle(
             "Hide app menus when showing menu bar items",
@@ -85,7 +81,6 @@ struct AdvancedSettingsPane: View {
         }
     }
 
-    @ViewBuilder
     private var enableSecondaryContextMenu: some View {
         Toggle(
             "Enable secondary context menu",
@@ -103,13 +98,12 @@ struct AdvancedSettingsPane: View {
         }
     }
 
-    @ViewBuilder
     private var showOnHoverDelay: some View {
         LabeledContent {
             IceSlider(
                 formattedToSeconds(settings.showOnHoverDelay),
                 value: $settings.showOnHoverDelay,
-                in: 0...1,
+                in: 0 ... 1,
                 step: 0.1
             )
         } label: {
@@ -122,13 +116,12 @@ struct AdvancedSettingsPane: View {
         .annotation("The amount of time to wait before showing on hover.")
     }
 
-    @ViewBuilder
     private var tempShowInterval: some View {
         LabeledContent {
             IceSlider(
                 formattedToSeconds(settings.tempShowInterval),
                 value: $settings.tempShowInterval,
-                in: 0...60,
+                in: 0 ... 60,
                 step: 1
             )
         } label: {
@@ -141,7 +134,6 @@ struct AdvancedSettingsPane: View {
         .annotation("The amount of time to wait before hiding temporarily shown menu bar items.")
     }
 
-    @ViewBuilder
     private var allPermissions: some View {
         ForEach(appState.permissions.allPermissions) { permission in
             LabeledContent {

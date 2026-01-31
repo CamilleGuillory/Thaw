@@ -1,6 +1,6 @@
 //
 //  SettingsWindow.swift
-//  Ice
+//  Thaw
 //
 
 import Combine

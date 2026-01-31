@@ -1,6 +1,6 @@
 //
 //  IceBarLocation.swift
-//  Ice
+//  Thaw
 //
 
 import SwiftUI
@@ -16,7 +16,9 @@ enum IceBarLocation: Int, CaseIterable, Identifiable {
     /// The Ice Bar will appear centered below the Ice icon.
     case iceIcon = 2
 
-    var id: Int { rawValue }
+    var id: Int {
+        rawValue
+    }
 
     /// Localized string key representation.
     var localized: LocalizedStringKey {

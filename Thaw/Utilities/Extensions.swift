@@ -1,6 +1,6 @@
 //
 //  Extensions.swift
-//  Ice
+//  Thaw
 //
 
 import Combine
@@ -141,8 +141,8 @@ extension CGImage {
         var count = UInt64(width * height)
         var totals: (r: UInt64, g: UInt64, b: UInt64, a: UInt64) = (0, 0, 0, 0)
 
-        for column in 0..<width {
-            for row in 0..<height {
+        for column in 0 ..< width {
+            for row in 0 ..< height {
                 let pixel = pixelData[(row * width) + column]
 
                 // Check alpha before computing other components.
@@ -221,8 +221,8 @@ extension CGImage {
             self.cgContext = cgContext
             self.data = data
             self.zeroByteBlock = zeroByteBlock
-            self.rowRange = 0..<image.height
-            self.columnRange = 0..<image.width
+            self.rowRange = 0 ..< image.height
+            self.columnRange = 0 ..< image.width
         }
 
         deinit {

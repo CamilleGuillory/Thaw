@@ -1,6 +1,6 @@
 //
 //  MenuBarAppearanceEditor.swift
-//  Ice
+//  Thaw
 //
 
 import SwiftUI

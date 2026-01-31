@@ -1,6 +1,6 @@
 //
 //  IceGradientPicker.swift
-//  Ice
+//  Thaw
 //
 
 import Combine
@@ -131,7 +131,6 @@ private struct IceGradientPickerRoot: View {
             .opacity(isEnabled ? 1 : 0.5)
     }
 
-    @ViewBuilder
     private var borderView: some View {
         borderShape
             .strokeBorder(.tertiary)
@@ -140,23 +139,20 @@ private struct IceGradientPickerRoot: View {
             }
     }
 
-    @ViewBuilder
     private var centerTickMark: some View {
         Rectangle()
             .fill(.tertiary)
             .frame(width: 1, height: 6)
     }
 
-    @ViewBuilder
     private func insertionReader(geometry: GeometryProxy) -> some View {
         Color.clear
             .contentShape(borderShape)
             .onTapGesture { location in
-                insertStop(at: (location.x / geometry.size.width), select: true)
+                insertStop(at: location.x / geometry.size.width, select: true)
             }
     }
 
-    @ViewBuilder
     private func handles(geometry: GeometryProxy) -> some View {
         ForEach(gradient.stops.indices, id: \.self) { index in
             IceGradientPickerHandle(
@@ -171,7 +167,7 @@ private struct IceGradientPickerRoot: View {
     }
 
     private func insertStop(at location: CGFloat, select: Bool) {
-        var location = location.clamped(to: 0...1)
+        var location = location.clamped(to: 0 ... 1)
         if abs(location - 0.5) <= 0.025 {
             location = 0.5
         }
@@ -382,11 +378,11 @@ private struct IceGradientPickerHandle: View {
             return
         }
 
-        var location = (value.location.x / geometry.size.width).clamped(to: 0...1)
+        var location = (value.location.x / geometry.size.width).clamped(to: 0 ... 1)
 
         if
             !NSEvent.modifierFlags.contains(.command),
-            abs(value.velocity.width) <= 75 && abs(location - 0.5) <= 0.025
+            abs(value.velocity.width) <= 75, abs(location - 0.5) <= 0.025
         {
             location = 0.5
         }

@@ -1,6 +1,6 @@
 //
 //  KeyCombination.swift
-//  Ice
+//  Thaw
 //
 
 import Carbon.HIToolbox
@@ -64,6 +64,7 @@ private func getSystemReservedKeyCombinations() -> [KeyCombination] {
 }
 
 // MARK: KeyCombination: Codable
+
 extension KeyCombination: Codable {
     init(from decoder: any Decoder) throws {
         var container = try decoder.unkeyedContainer()

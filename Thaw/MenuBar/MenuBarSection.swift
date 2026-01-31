@@ -1,6 +1,6 @@
 //
 //  MenuBarSection.swift
-//  Ice
+//  Thaw
 //
 
 import OSLog

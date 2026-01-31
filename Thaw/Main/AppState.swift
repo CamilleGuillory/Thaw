@@ -1,13 +1,13 @@
 //
 //  AppState.swift
-//  Ice
+//  Thaw
 //
 
 import Combine
+import CoreGraphics
+import Darwin.Mach
 import OSLog
 import SwiftUI
-import Darwin.Mach
-import CoreGraphics
 
 /// The model for app-wide state.
 @MainActor

@@ -1,6 +1,6 @@
 //
 //  ControlItem.swift
-//  Ice
+//  Thaw
 //
 
 import Cocoa
@@ -53,7 +53,7 @@ final class ControlItem {
     /// A namespace for control item lengths.
     private enum Lengths {
         static let standard: CGFloat = NSStatusItem.variableLength
-        static let expanded: CGFloat = 10_000
+        static let expanded: CGFloat = 10000
     }
 
     /// Storage for a control item's underlying status item.
@@ -376,7 +376,7 @@ final class ControlItem {
                     button.appearsDisabled = true
                     button.isHighlighted = false
 
-                    if appState.isDraggingMenuBarItem && appState.settings.advanced.showAllSectionsOnUserDrag {
+                    if appState.isDraggingMenuBarItem, appState.settings.advanced.showAllSectionsOnUserDrag {
                         // We still want a subtle marker between sections.
                         button.title = "|"
                     }
@@ -687,12 +687,14 @@ extension ControlItemDefaults {
 }
 
 // MARK: ControlItemDefaults.Key<CGFloat>
+
 extension ControlItemDefaults.Key<CGFloat> {
     /// String key: "NSStatusItem Preferred Position autosaveName"
     static let preferredPosition = Self(rawValue: "Preferred Position")
 }
 
 // MARK: ControlItemDefaults.Key<Bool>
+
 extension ControlItemDefaults.Key<Bool> {
     /// String key: "NSStatusItem Visible autosaveName"
     static let visible = Self(rawValue: "Visible")

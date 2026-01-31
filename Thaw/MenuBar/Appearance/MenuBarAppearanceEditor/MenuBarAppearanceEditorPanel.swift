@@ -1,6 +1,6 @@
 //
 //  MenuBarAppearanceEditorPanel.swift
-//  Ice
+//  Thaw
 //
 
 import Combine
@@ -148,12 +148,12 @@ private final class MenuBarAppearanceEditorHostingView: NSHostingView<MenuBarApp
     }
 
     @available(*, unavailable)
-    required init?(coder: NSCoder) {
+    required init?(coder _: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
 
     @available(*, unavailable)
-    required init(rootView: MenuBarAppearanceEditorContentView) {
+    required init(rootView _: MenuBarAppearanceEditorContentView) {
         fatalError("init(rootView:) has not been implemented")
     }
 }

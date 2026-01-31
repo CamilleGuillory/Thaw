@@ -1,6 +1,6 @@
 //
 //  IceGroupBox.swift
-//  Ice
+//  Thaw
 //
 
 import SwiftUI
@@ -184,7 +184,6 @@ struct IceGroupBox<Header: View, Content: View, Footer: View>: View {
         .accessibilityElement(children: .contain)
     }
 
-    @ViewBuilder
     private var contentStack: some View {
         VStack { content }
     }

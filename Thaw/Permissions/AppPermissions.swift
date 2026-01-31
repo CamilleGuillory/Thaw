@@ -1,6 +1,6 @@
 //
 //  AppPermissions.swift
-//  Ice
+//  Thaw
 //
 
 import Combine

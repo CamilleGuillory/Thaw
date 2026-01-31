@@ -1,6 +1,6 @@
 //
 //  MenuBarManager.swift
-//  Ice
+//  Thaw
 //
 
 import Combine

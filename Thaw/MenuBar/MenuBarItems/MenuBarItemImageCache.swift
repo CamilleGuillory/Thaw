@@ -1,6 +1,6 @@
 //
 //  MenuBarItemImageCache.swift
-//  Ice
+//  Thaw
 //
 
 import Cocoa

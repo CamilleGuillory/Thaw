@@ -1,6 +1,6 @@
 //
 //  MenuBarShapePicker.swift
-//  Ice
+//  Thaw
 //
 
 import SwiftUI
@@ -22,7 +22,6 @@ struct MenuBarShapePicker: View {
         }
     }
 
-    @ViewBuilder
     private var shapeKindPicker: some View {
         IcePicker("Shape Kind", selection: $configuration.shapeKind) {
             ForEach(MenuBarShapeKind.allCases) { shapeKind in
@@ -54,7 +53,6 @@ private struct MenuBarFullShapePicker: View, Equatable {
         }
     }
 
-    @ViewBuilder
     private var pickerStack: some View {
         HStack(spacing: 0) {
             leadingEndCapPicker
@@ -65,7 +63,6 @@ private struct MenuBarFullShapePicker: View, Equatable {
         .pickerStyle(.segmented)
     }
 
-    @ViewBuilder
     private var exampleStack: some View {
         HStack(spacing: 0) {
             leadingEndCapExample
@@ -100,7 +97,6 @@ private struct MenuBarFullShapePicker: View, Equatable {
         }
     }
 
-    @ViewBuilder
     private var leadingEndCapPicker: some View {
         Picker("Leading End Cap", selection: $info.leadingEndCap) {
             ForEach(MenuBarEndCap.allCases.reversed(), id: \.self) { endCap in
@@ -110,7 +106,6 @@ private struct MenuBarFullShapePicker: View, Equatable {
         .fixedSize()
     }
 
-    @ViewBuilder
     private var trailingEndCapPicker: some View {
         Picker("Trailing End Cap", selection: $info.trailingEndCap) {
             ForEach(MenuBarEndCap.allCases, id: \.self) { endCap in
@@ -120,7 +115,6 @@ private struct MenuBarFullShapePicker: View, Equatable {
         .fixedSize()
     }
 
-    @ViewBuilder
     private var leadingEndCapExample: some View {
         MenuBarEndCapExampleView(
             endCap: info.leadingEndCap,
@@ -128,7 +122,6 @@ private struct MenuBarFullShapePicker: View, Equatable {
         )
     }
 
-    @ViewBuilder
     private var trailingEndCapExample: some View {
         MenuBarEndCapExampleView(
             endCap: info.trailingEndCap,

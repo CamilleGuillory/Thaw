@@ -1,6 +1,6 @@
 //
 //  NavigationIdentifier.swift
-//  Ice
+//  Thaw
 //
 
 import SwiftUI
@@ -15,9 +15,13 @@ protocol NavigationIdentifier: CaseIterable, Hashable, Identifiable, RawRepresen
 }
 
 extension NavigationIdentifier where ID == Int {
-    var id: Int { hashValue }
+    var id: Int {
+        hashValue
+    }
 }
 
 extension NavigationIdentifier where RawValue == String {
-    var localized: LocalizedStringKey { LocalizedStringKey(rawValue) }
+    var localized: LocalizedStringKey {
+        LocalizedStringKey(rawValue)
+    }
 }

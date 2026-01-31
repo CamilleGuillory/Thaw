@@ -1,6 +1,6 @@
 //
 //  IceForm.swift
-//  Ice
+//  Thaw
 //
 
 import SwiftUI
@@ -57,7 +57,6 @@ struct IceForm<Content: View>: View {
         .accessibilityElement(children: .contain)
     }
 
-    @ViewBuilder
     private var contentLayout: some View {
         VStack(alignment: alignment, spacing: spacing) {
             content

@@ -1,6 +1,6 @@
 //
 //  SettingsView.swift
-//  Ice
+//  Thaw
 //
 
 import SwiftUI
@@ -103,7 +103,6 @@ struct SettingsView: View {
         .navigationSplitViewColumnWidth(sidebarWidth)
     }
 
-    @ViewBuilder
     private func sidebarItem(for identifier: SettingsNavigationIdentifier) -> some View {
         Label {
             Text(identifier.localized)

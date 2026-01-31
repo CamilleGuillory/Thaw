@@ -1,6 +1,6 @@
 //
 //  HotkeyRecorder.swift
-//  Ice
+//  Thaw
 //
 
 import Combine
@@ -34,7 +34,6 @@ struct HotkeyRecorder<Label: View>: View {
         }
     }
 
-    @ViewBuilder
     private var segmentStack: some View {
         HStack(spacing: 1) {
             leadingSegment
@@ -43,7 +42,6 @@ struct HotkeyRecorder<Label: View>: View {
         .frame(width: 132, height: 24)
     }
 
-    @ViewBuilder
     private var leadingSegment: some View {
         Button {
             if model.isRecording {
@@ -62,7 +60,6 @@ struct HotkeyRecorder<Label: View>: View {
         )
     }
 
-    @ViewBuilder
     private var trailingSegment: some View {
         Button {
             if model.isRecording {

@@ -1,6 +1,6 @@
 //
 //  MenuBarItemTag.swift
-//  Ice
+//  Thaw
 //
 
 import CoreGraphics
@@ -26,7 +26,7 @@ struct MenuBarItemTag: Hashable, CustomStringConvertible {
     /// by this tag can be hidden.
     var canBeHidden: Bool {
         !MenuBarItemTag.nonHideableItems.contains(self) &&
-        !(namespace.isUUID && title == "AudioVideoModule")
+            !(namespace.isUUID && title == "AudioVideoModule")
     }
 
     /// A Boolean value that indicates whether the item identified
@@ -72,7 +72,6 @@ struct MenuBarItemTag: Hashable, CustomStringConvertible {
 // MARK: MenuBarItemTag Constants
 
 extension MenuBarItemTag {
-
     // MARK: Special Item Lists
 
     /// An array of tags for items whose movement is prevented by macOS.
@@ -176,8 +175,8 @@ extension MenuBarItemTag {
         var description: String {
             switch self {
             case .null: "null"
-            case .string(let string): string
-            case .uuid(let uuid): uuid.uuidString
+            case let .string(string): string
+            case let .uuid(uuid): uuid.uuidString
             }
         }
 
@@ -221,6 +220,7 @@ extension MenuBarItemTag {
 }
 
 // MARK: MenuBarItemTag.Namespace Constants
+
 extension MenuBarItemTag.Namespace {
     /// The namespace for the "Ice" process.
     static let ice = string(Constants.bundleIdentifier)

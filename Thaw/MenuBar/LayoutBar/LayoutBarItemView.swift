@@ -1,6 +1,6 @@
 //
 //  LayoutBarItemView.swift
-//  Ice
+//  Thaw
 //
 
 import Cocoa
@@ -75,7 +75,7 @@ final class LayoutBarItemView: NSView {
     }
 
     @available(*, unavailable)
-    required init?(coder: NSCoder) {
+    required init?(coder _: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
 
@@ -111,7 +111,7 @@ final class LayoutBarItemView: NSView {
         return alert
     }
 
-    override func draw(_ dirtyRect: NSRect) {
+    override func draw(_: NSRect) {
         if !isDraggingPlaceholder {
             cachedImage?.nsImage.draw(
                 in: bounds,
@@ -166,12 +166,13 @@ final class LayoutBarItemView: NSView {
 }
 
 // MARK: LayoutBarItemView: NSDraggingSource
+
 extension LayoutBarItemView: NSDraggingSource {
-    func draggingSession(_ session: NSDraggingSession, sourceOperationMaskFor context: NSDraggingContext) -> NSDragOperation {
+    func draggingSession(_: NSDraggingSession, sourceOperationMaskFor _: NSDraggingContext) -> NSDragOperation {
         return .move
     }
 
-    func draggingSession(_ session: NSDraggingSession, willBeginAt screenPoint: NSPoint) {
+    func draggingSession(_ session: NSDraggingSession, willBeginAt _: NSPoint) {
         // make sure the container doesn't update its arranged views and that items
         // aren't arranged during a dragging session
         if let container = superview as? LayoutBarContainer {
@@ -187,7 +188,7 @@ extension LayoutBarItemView: NSDraggingSource {
         }
     }
 
-    func draggingSession(_ session: NSDraggingSession, endedAt screenPoint: NSPoint, operation: NSDragOperation) {
+    func draggingSession(_: NSDraggingSession, endedAt _: NSPoint, operation _: NSDragOperation) {
         defer {
             // always remove container info at the end of a session
             oldContainerInfo = nil
@@ -212,9 +213,10 @@ extension LayoutBarItemView: NSDraggingSource {
     }
 }
 
-extension LayoutBarItemView: NSAccessibilityLayoutItem { }
+extension LayoutBarItemView: NSAccessibilityLayoutItem {}
 
 // MARK: Layout Bar Item Pasteboard Type
+
 extension NSPasteboard.PasteboardType {
     static let layoutBarItem = Self("\(Constants.bundleIdentifier).layout-bar-item")
 }

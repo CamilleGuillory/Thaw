@@ -1,6 +1,6 @@
 //
 //  MenuBarTintKind.swift
-//  Ice
+//  Thaw
 //
 
 import SwiftUI
@@ -14,7 +14,9 @@ enum MenuBarTintKind: Int, CaseIterable, Codable, Identifiable {
     /// The menu bar is tinted with a gradient.
     case gradient = 2
 
-    var id: Int { rawValue }
+    var id: Int {
+        rawValue
+    }
 
     /// Localized string key representation.
     var localized: LocalizedStringKey {

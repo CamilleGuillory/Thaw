@@ -1,6 +1,6 @@
 //
 //  ConcurrencyHelpers.swift
-//  Ice
+//  Thaw
 //
 
 import Foundation
@@ -11,7 +11,9 @@ import os.lock
 /// An error that indicates that a task timed out.
 struct TaskTimeoutError: CustomStringConvertible, LocalizedError {
     let description = "Task timed out before completion"
-    var errorDescription: String? { description }
+    var errorDescription: String? {
+        description
+    }
 }
 
 extension Task {
