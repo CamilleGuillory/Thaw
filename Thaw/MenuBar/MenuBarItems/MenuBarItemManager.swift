@@ -1649,6 +1649,18 @@ extension MenuBarItemManager {
 
         while let context = currentContexts.popLast() {
             guard let item = items.first(matching: context.tag) else {
+                context.rehideAttempts += 1
+                logger.debug(
+                    """
+                    Missing temporarily shown item \(context.tag, privacy: .public) on active space \
+                    (attempt \(context.rehideAttempts, privacy: .public)); will retry
+                    """
+                )
+                if context.rehideAttempts < 3 {
+                    failedContexts.append(context)
+                } else {
+                    context.rehideAttempts = 0
+                }
                 continue
             }
             do {
@@ -1678,7 +1690,7 @@ extension MenuBarItemManager {
         } else {
             logger.error(
                 """
-                Some items failed to rehide: \
+                Some items failed to rehide or were missing; retrying: \
                 \(failedContexts.map { $0.tag }, privacy: .public)
                 """
             )
