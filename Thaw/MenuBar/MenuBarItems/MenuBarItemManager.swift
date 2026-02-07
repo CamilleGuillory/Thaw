@@ -1565,88 +1565,28 @@ extension MenuBarItemManager {
             logger.error("Missing AppState, so not showing \(item.logString, privacy: .public)")
             return
         }
-        guard let screen = NSScreen.screenWithActiveMenuBar else {
-            logger.error("No active menu bar screen, so not showing \(item.logString, privacy: .public)")
-            return
-        }
-
-        guard let applicationMenuFrame = screen.getApplicationMenuFrame() else {
-            logger.error("No application menu frame, so not showing \(item.logString, privacy: .public)")
-            return
-        }
-
-        var items = await MenuBarItem.getMenuBarItems(option: .activeSpace)
+        let items = await MenuBarItem.getMenuBarItems(option: .activeSpace)
 
         guard let destination = getReturnDestination(for: item, in: items) else {
             logger.error("No return destination for \(item.logString, privacy: .public)")
             return
         }
 
-        // Remove all items up to and including the hidden control item.
-        if let index = items.firstIndex(matching: .hiddenControlItem) {
-            items.removeSubrange(...index)
-        }
+        // Prefer inserting to the left of the Thaw/visible control item so the icon appears
+        // where users expect. If it’s missing, fall back to the first non-control item.
+        let visibleControl = items.first(matching: .visibleControlItem)
+        let targetItem = visibleControl ?? items.first(where: { !$0.isControlItem && $0.canBeHidden }) ?? items.first
 
-        var maxX: CGFloat = {
-            var maxX = applicationMenuFrame.maxX
-            if let frameOfNotch = screen.frameOfNotch {
-                maxX = max(maxX, frameOfNotch.maxX + 30)
-            }
-            return maxX + item.bounds.width
-        }()
-
-        // Clamp the computed width so we never assume the application menu
-        // extends past the first on-screen item on this display (important for
-        // secondary/notched displays where AX may overestimate).
-        let displayBounds = CGDisplayBounds(screen.displayID)
-        if let leftmostItemX = items
-            .filter(\.isOnScreen)
-            .filter({ $0.bounds.intersects(displayBounds) })
-            .map(\.bounds.minX)
-            .min()
-        {
-            let clampedMaxX = leftmostItemX - item.bounds.width - 6
-            if clampedMaxX.isFinite {
-                maxX = min(maxX, clampedMaxX)
-            }
-        }
-
-        // Remove items until we have enough room to show this item.
-        items.trimPrefix { item in
-            if item.isOnScreen, item.canBeHidden {
-                return item.bounds.minX <= maxX
-            }
-            return true
-        }
-
-        var targetItem = items.first
-        var moveDestination: MoveDestination?
-
-        if let first = targetItem, first.tag == .visibleControlItem {
-            if #available(macOS 26.0, *) {
-                let controlBounds = Bridging.getWindowBounds(for: first.windowID) ?? first.bounds
-                let availableLeftSpace = controlBounds.minX - applicationMenuFrame.maxX
-                if availableLeftSpace >= item.bounds.width + 6 {
-                    moveDestination = .leftOfItem(first)
-                } else if let next = items.dropFirst().first {
-                    targetItem = next
-                } else {
-                    moveDestination = .rightOfItem(first)
-                }
-            } else if let next = items.dropFirst().first {
-                targetItem = next
-            } else {
-                moveDestination = .rightOfItem(first)
-            }
-        }
-
-        guard let targetItem else {
-            logger.warning("Not enough room to show \(item.logString, privacy: .public)")
+        // If we couldn’t find any anchor, bail gracefully.
+        guard let anchor = targetItem else {
+            logger.warning("Not enough room or no anchor to show \(item.logString, privacy: .public)")
             let alert = NSAlert()
             alert.messageText = "Not enough room to show \"\(item.displayName)\""
             alert.runModal()
             return
         }
+
+        let moveDestination: MoveDestination = .leftOfItem(anchor)
 
         appState.hidEventManager.stopAll()
         defer {
@@ -1656,7 +1596,7 @@ extension MenuBarItemManager {
         logger.debug("Temporarily showing \(item.logString, privacy: .public)")
 
         do {
-            try await move(item: item, to: moveDestination ?? .leftOfItem(targetItem))
+            try await move(item: item, to: moveDestination)
         } catch {
             logger.error("Error showing item: \(error, privacy: .public)")
             return
