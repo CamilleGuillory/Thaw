@@ -2011,6 +2011,8 @@ private enum MenuBarItemEventType {
 // MARK: Layout Reset
 
 extension MenuBarItemManager {
+    private static let layoutResetWatchdogTimeout: DispatchTimeInterval = .seconds(6)
+
     /// Errors that can occur during a layout reset.
     enum LayoutResetError: LocalizedError {
         case missingAppState
@@ -2101,7 +2103,11 @@ extension MenuBarItemManager {
                 }
 
                 do {
-                    try await move(item: item, to: .leftOfItem(anchor))
+                    try await move(
+                        item: item,
+                        to: .leftOfItem(anchor),
+                        watchdogTimeout: Self.layoutResetWatchdogTimeout
+                    )
                 } catch {
                     failed += 1
                     logger.error("Failed to move \(item.logString, privacy: .public) during layout reset: \(error, privacy: .public)")
