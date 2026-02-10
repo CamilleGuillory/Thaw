@@ -72,15 +72,11 @@ final class MenuBarSection {
     }
 
     /// The best screen to show the Ice Bar on.
+    ///
+    /// Always returns the screen with the active menu bar so that
+    /// clicking icons in the IceBar actually activates their popups.
     private weak var screenForIceBar: NSScreen? {
-        guard let appState else {
-            return nil
-        }
-        if appState.activeSpace.isFullscreen {
-            return NSScreen.screenWithMouse ?? NSScreen.main
-        } else {
-            return NSScreen.main
-        }
+        NSScreen.screenWithActiveMenuBar ?? NSScreen.main
     }
 
     /// A Boolean value that indicates whether the section is hidden.

@@ -526,14 +526,13 @@ extension HIDEventManager {
 
 extension HIDEventManager {
     /// Returns the best screen to use for event manager calculations.
-    func bestScreen(appState: AppState) -> NSScreen? {
-        guard
-            appState.activeSpace.isFullscreen,
-            let screen = NSScreen.screenWithMouse
-        else {
-            return NSScreen.main
-        }
-        return screen
+    ///
+    /// Always returns the screen that currently owns the active menu bar.
+    /// This prevents showing the hidden section or IceBar on a monitor
+    /// whose menu bar is inactive (e.g. when another monitor has a
+    /// fullscreen app), where clicking icons would have no effect.
+    func bestScreen(appState _: AppState) -> NSScreen? {
+        NSScreen.screenWithActiveMenuBar ?? NSScreen.main
     }
 
     /// A Boolean value that indicates whether the mouse pointer is within
