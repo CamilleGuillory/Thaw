@@ -84,7 +84,7 @@ struct GeneralSettingsPane: View {
 
     @ViewBuilder
     private var iceIconPicker: some View {
-        let labelKey = LocalizedStringKey("Ice icon")
+        let labelKey: LocalizedStringKey = "\(Constants.displayName) icon"
 
         IceMenu(labelKey) {
             Picker(labelKey, selection: $settings.iceIcon) {
