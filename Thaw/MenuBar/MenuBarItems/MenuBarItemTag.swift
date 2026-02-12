@@ -35,7 +35,8 @@ struct MenuBarItemTag: Hashable, CustomStringConvertible {
     /// A Boolean value that indicates whether the item identified
     /// by this tag is a control item owned by Ice.
     var isControlItem: Bool {
-        MenuBarItemTag.controlItems.contains(self)
+        MenuBarItemTag.controlItems.contains(self) ||
+            title.contains(".Spacer.")
     }
 
     /// A Boolean value that indicates whether the item identified

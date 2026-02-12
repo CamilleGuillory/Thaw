@@ -448,6 +448,9 @@ private struct MenuBarSearchContentView: View {
                 for item in itemManager.itemCache.managedItems(for: name)
                     .reversed()
                 {
+                    guard !item.isControlItem else {
+                        continue
+                    }
                     let listItem = ListItem.item(id: .item(item.tag)) {
                         performAction(for: item)
                     } content: {
