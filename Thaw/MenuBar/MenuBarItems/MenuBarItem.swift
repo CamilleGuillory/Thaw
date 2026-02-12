@@ -220,15 +220,8 @@ extension MenuBarItem {
 
     static func getMenuBarItemWindows(on display: CGDirectDisplayID? = nil, option: ListOption) -> [WindowInfo] {
         var bridgingOption: Bridging.MenuBarWindowListOption = .itemsOnly
-        var displayBoundsPredicate: (CGWindowID) -> Bool = { _ in true }
 
-        if let display {
-            bridgingOption.insert(.onScreen)
-            let displayBounds = CGDisplayBounds(display)
-            displayBoundsPredicate = { windowID in
-                Bridging.windowIntersectsDisplayBounds(windowID, displayBounds)
-            }
-        } else if option.contains(.onScreen) {
+        if option.contains(.onScreen) {
             bridgingOption.insert(.onScreen)
         }
         if option.contains(.activeSpace) {
@@ -238,15 +231,23 @@ extension MenuBarItem {
         let rawWindowIDs = Bridging.getMenuBarWindowList(option: bridgingOption)
         diagLog.debug("getMenuBarItemWindows: Bridging returned \(rawWindowIDs.count) window IDs (display=\(display.map { "\($0)" } ?? "nil"))")
 
+        let displayBounds = display.map { CGDisplayBounds($0) }
+
         let windows = rawWindowIDs.reversed().compactMap { windowID -> WindowInfo? in
-            guard displayBoundsPredicate(windowID) else {
-                diagLog.debug("getMenuBarItemWindows: windowID \(windowID) filtered by display bounds")
-                return nil
-            }
             guard let window = WindowInfo(windowID: windowID) else {
                 diagLog.warning("getMenuBarItemWindows: WindowInfo init failed for windowID \(windowID)")
                 return nil
             }
+
+            if let displayBounds {
+                // Hidden items are pushed far off-screen horizontally, but they maintain
+                // their vertical (Y) coordinate. Filter by the display's Y range.
+                let midY = window.bounds.midY
+                guard midY >= displayBounds.minY, midY <= displayBounds.maxY else {
+                    return nil
+                }
+            }
+
             return window
         }
 

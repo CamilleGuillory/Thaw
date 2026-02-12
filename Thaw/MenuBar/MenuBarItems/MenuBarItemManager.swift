@@ -1270,7 +1270,8 @@ extension MenuBarItemManager {
     /// move a menu bar item to the given destination.
     private nonisolated func getTargetPoints(
         forMoving item: MenuBarItem,
-        to destination: MoveDestination
+        to destination: MoveDestination,
+        on displayID: CGDirectDisplayID
     ) async throws -> (start: CGPoint, end: CGPoint) {
         let itemBounds = try await getCurrentBounds(for: item)
         let targetBounds = try await getCurrentBounds(for: destination.targetItem)
@@ -1301,12 +1302,10 @@ extension MenuBarItemManager {
             }
         }
 
-        // Keep the initial press away from the Apple menu hit region. On macOS 14/15
-        // AX can fail to provide the application menu frame; fall back to the leftmost
-        // on-screen item to approximate a safe edge.
-        if let screen = NSScreen.screenWithActiveMenuBar {
+        // Keep the initial press away from the Apple menu hit region.
+        if let screen = NSScreen.screens.first(where: { $0.displayID == displayID }) {
             let padding: CGFloat = 6
-            let displayBounds = CGDisplayBounds(screen.displayID)
+            let displayBounds = CGDisplayBounds(displayID)
 
             var clampSource = "none"
             if #available(macOS 16.0, *) {
@@ -1316,7 +1315,7 @@ extension MenuBarItemManager {
                     clampSource = "axMenuFrame"
                 }
                 if safeMaxX == nil {
-                    let items = await MenuBarItem.getMenuBarItems(option: .onScreen)
+                    let items = await MenuBarItem.getMenuBarItems(on: displayID, option: .onScreen)
                     if let minX = items
                         .filter({ $0.bounds.intersects(displayBounds) })
                         .map(\.bounds.minX)
@@ -1337,20 +1336,13 @@ extension MenuBarItemManager {
             }
 
             // Keep event coordinates away from screen corners to avoid
-            // triggering macOS hot corners. Hot corners activate when the
-            // cursor reaches both the extreme x and y of a corner
-            // simultaneously. Since menu bar events always use y values
-            // near the top edge, offsetting y by a few pixels is enough
-            // to prevent all top-corner activations without affecting the
-            // x range needed for item moves.
+            // triggering macOS hot corners.
             let cornerInset: CGFloat = 10
             start.y = max(start.y, displayBounds.minY + cornerInset)
             end.y = max(end.y, displayBounds.minY + cornerInset)
 
-            let targetDisplay = CGDisplayBounds(screen.displayID).contains(targetBounds.origin) ? screen.displayID : CGMainDisplayID()
-            let itemDisplay = CGDisplayBounds(screen.displayID).contains(itemBounds.origin) ? screen.displayID : CGMainDisplayID()
             MenuBarItemManager.diagLog.debug(
-                "Move clamp source=\(clampSource) startX=\(start.x) targetMinX=\(targetBounds.minX) itemMinX=\(itemBounds.minX) targetTag=\(destination.targetItem.tag) itemTag=\(item.tag) clampDisplay=\(screen.displayID) targetDisplay=\(targetDisplay) itemDisplay=\(itemDisplay)"
+                "Move clamp source=\(clampSource) startX=\(start.x) targetMinX=\(targetBounds.minX) itemMinX=\(itemBounds.minX) targetTag=\(destination.targetItem.tag) itemTag=\(item.tag) display=\(displayID)"
             )
         }
         return (start, end)
@@ -1360,7 +1352,8 @@ extension MenuBarItemManager {
     /// item has the correct position, relative to the given destination.
     private nonisolated func itemHasCorrectPosition(
         item: MenuBarItem,
-        for destination: MoveDestination
+        for destination: MoveDestination,
+        on _: CGDirectDisplayID
     ) async throws -> Bool {
         let itemBounds = try await getCurrentBounds(for: item)
         let targetBounds = try await getCurrentBounds(for: destination.targetItem)
@@ -1426,7 +1419,11 @@ extension MenuBarItemManager {
     /// - Parameters:
     ///   - item: The menu bar item to move.
     ///   - destination: The destination to move the menu bar item.
-    private func postMoveEvents(item: MenuBarItem, destination: MoveDestination) async throws {
+    private func postMoveEvents(
+        item: MenuBarItem,
+        destination: MoveDestination,
+        on displayID: CGDirectDisplayID
+    ) async throws {
         do {
             try await eventSemaphore.wait(timeout: .seconds(5))
         } catch is SimpleSemaphore.TimeoutError {
@@ -1437,7 +1434,7 @@ extension MenuBarItemManager {
         defer { Task.detached { [eventSemaphore] in await eventSemaphore.signal() } }
 
         var itemOrigin = try await getCurrentBounds(for: item).origin
-        let targetPoints = try await getTargetPoints(forMoving: item, to: destination)
+        let targetPoints = try await getTargetPoints(forMoving: item, to: destination, on: displayID)
         let mouseLocation = try getMouseLocation()
         let source = try getEventSource()
 
@@ -1522,6 +1519,7 @@ extension MenuBarItemManager {
     func move(
         item: MenuBarItem,
         to destination: MoveDestination,
+        on displayID: CGDirectDisplayID? = nil,
         skipInputPause: Bool = false,
         watchdogTimeout: DispatchTimeInterval? = nil
     ) async throws {
@@ -1530,6 +1528,33 @@ extension MenuBarItemManager {
         }
         guard let appState else {
             throw EventError.cannotComplete
+        }
+
+        // Determine display ID early.
+        let resolvedDisplayID: CGDirectDisplayID
+        if let displayID = displayID {
+            resolvedDisplayID = displayID
+        } else if let window = appState.hidEventManager.bestScreen(appState: appState) {
+            resolvedDisplayID = window.displayID
+        } else {
+            resolvedDisplayID = Bridging.getActiveMenuBarDisplayID() ?? CGMainDisplayID()
+        }
+
+        // If the target display is not the one with the active menu bar, nudge it.
+        // This is crucial when a fullscreen app is on another monitor.
+        if Bridging.getActiveMenuBarDisplayID() != resolvedDisplayID {
+            let displayBounds = CGDisplayBounds(resolvedDisplayID)
+            // Target a neutral spot in the menu bar background (far left, just past the Apple menu).
+            let nudgePoint = CGPoint(x: displayBounds.minX + 60, y: displayBounds.minY + 10)
+            let source = try? getEventSource()
+            if let down = CGEvent(mouseEventSource: source, mouseType: .leftMouseDown, mouseCursorPosition: nudgePoint, mouseButton: .left),
+               let up = CGEvent(mouseEventSource: source, mouseType: .leftMouseUp, mouseCursorPosition: nudgePoint, mouseButton: .left)
+            {
+                down.post(to: .sessionEventTap)
+                up.post(to: .sessionEventTap)
+                // Give the system a micro-moment to register the focus change.
+                try? await Task.sleep(for: .milliseconds(50))
+            }
         }
 
         if !skipInputPause {
@@ -1545,11 +1570,11 @@ extension MenuBarItemManager {
         MenuBarItemManager.diagLog.info(
             """
             Moving \(item.logString) to \
-            \(destination.logString)
+            \(destination.logString) on display \(resolvedDisplayID)
             """
         )
 
-        guard try await !itemHasCorrectPosition(item: item, for: destination) else {
+        guard try await !itemHasCorrectPosition(item: item, for: destination, on: resolvedDisplayID) else {
             MenuBarItemManager.diagLog.debug("Item has correct position, cancelling move")
             return
         }
@@ -1565,15 +1590,13 @@ extension MenuBarItemManager {
                 throw EventError.cannotComplete
             }
             do {
-                if try await itemHasCorrectPosition(item: item, for: destination) {
+                if try await itemHasCorrectPosition(item: item, for: destination, on: resolvedDisplayID) {
                     MenuBarItemManager.diagLog.debug("Item has correct position, finished with move")
                     return
                 }
-                try await postMoveEvents(item: item, destination: destination)
-                // Verify the item actually reached the correct position. The
-                // events may have been accepted but the item might not have
-                // landed at the exact destination.
-                if try await itemHasCorrectPosition(item: item, for: destination) {
+                try await postMoveEvents(item: item, destination: destination, on: resolvedDisplayID)
+                // Verify the item actually reached the correct position.
+                if try await itemHasCorrectPosition(item: item, for: destination, on: resolvedDisplayID) {
                     MenuBarItemManager.diagLog.debug("Attempt \(n) succeeded and verified, finished with move")
                     return
                 }
@@ -1749,6 +1772,9 @@ extension MenuBarItemManager {
         /// nonstandard popup windows that ``shownInterfaceWindow`` may miss.
         let sourcePID: pid_t
 
+        /// The display identifier where the item was shown.
+        let displayID: CGDirectDisplayID
+
         /// The destination to return the item to (captured at show-time).
         /// This is the preferred destination, but may become stale if the
         /// target item has moved or disappeared by the time we rehide.
@@ -1841,12 +1867,14 @@ extension MenuBarItemManager {
         init(
             tag: MenuBarItemTag,
             sourcePID: pid_t,
+            displayID: CGDirectDisplayID,
             returnDestination: MoveDestination,
             fallbackNeighborTag: MenuBarItemTag?,
             originalSection: MenuBarSection.Name
         ) {
             self.tag = tag
             self.sourcePID = sourcePID
+            self.displayID = displayID
             self.returnDestination = returnDestination
             self.fallbackNeighborTag = fallbackNeighborTag
             self.originalSection = originalSection
@@ -1939,10 +1967,21 @@ extension MenuBarItemManager {
     /// - Parameters:
     ///   - item: The item to temporarily show.
     ///   - mouseButton: The mouse button to click the item with.
-    func temporarilyShow(item: MenuBarItem, clickingWith mouseButton: CGMouseButton) async {
+    ///   - displayID: The display identifier to show the item on.
+    func temporarilyShow(item: MenuBarItem, clickingWith mouseButton: CGMouseButton, on displayID: CGDirectDisplayID? = nil) async {
         guard let appState else {
             MenuBarItemManager.diagLog.error("Missing AppState, so not showing \(item.logString)")
             return
+        }
+
+        // Determine the displayID for this item.
+        let resolvedDisplayID: CGDirectDisplayID
+        if let displayID {
+            resolvedDisplayID = displayID
+        } else {
+            let itemBounds = Bridging.getWindowBounds(for: item.windowID) ?? item.bounds
+            let screen = NSScreen.screens.first { $0.frame.intersects(itemBounds) }
+            resolvedDisplayID = screen?.displayID ?? Bridging.getActiveMenuBarDisplayID() ?? CGMainDisplayID()
         }
 
         // Determine the item's original section early so we can persist it
@@ -1970,10 +2009,11 @@ extension MenuBarItemManager {
             }
         }
 
-        let items = await MenuBarItem.getMenuBarItems(option: .activeSpace)
+        // Fetch items specifically for the display where the item lives.
+        let items = await MenuBarItem.getMenuBarItems(on: resolvedDisplayID, option: .activeSpace)
 
         guard let returnInfo = getReturnDestination(for: item, in: items) else {
-            MenuBarItemManager.diagLog.error("No return destination for \(item.logString)")
+            MenuBarItemManager.diagLog.error("No return destination for \(item.logString) on display \(resolvedDisplayID)")
             return
         }
 
@@ -1993,7 +2033,7 @@ extension MenuBarItemManager {
 
         let moveDestination: MoveDestination = .leftOfItem(anchor)
 
-        // Record the item's original section so we can relocate it if its app
+        // Record the item's original section early so we can relocate it if its app
         // quits before we get a chance to rehide it (macOS persists the
         // physical position set by the Cmd+drag, so on relaunch the icon
         // would otherwise stay in the visible section).
@@ -2005,10 +2045,10 @@ extension MenuBarItemManager {
             appState.hidEventManager.startAll()
         }
 
-        MenuBarItemManager.diagLog.debug("Temporarily showing \(item.logString)")
+        MenuBarItemManager.diagLog.debug("Temporarily showing \(item.logString) on display \(resolvedDisplayID)")
 
         do {
-            try await move(item: item, to: moveDestination, skipInputPause: true)
+            try await move(item: item, to: moveDestination, on: resolvedDisplayID, skipInputPause: true)
         } catch {
             MenuBarItemManager.diagLog.error("Error showing item: \(error)")
             pendingRelocations.removeValue(forKey: tagIdentifier)
@@ -2019,6 +2059,7 @@ extension MenuBarItemManager {
         let context = TemporarilyShownItemContext(
             tag: item.tag,
             sourcePID: item.sourcePID ?? item.ownerPID,
+            displayID: resolvedDisplayID,
             returnDestination: returnInfo.destination,
             fallbackNeighborTag: returnInfo.fallbackNeighborTag,
             originalSection: originalSection
@@ -2035,11 +2076,8 @@ extension MenuBarItemManager {
         // correctly position their popup in response to a click.
         await waitForItemPositionToSettle(item: item)
 
-        // Re-fetch the item from the live window list so we click using the
-        // most up-to-date window information. Fall back to the original item
-        // if it can't be found (the window ID is the same after a Cmd+drag,
-        // but some apps recreate their status item in response to the move).
-        let refreshedItems = await MenuBarItem.getMenuBarItems(option: .onScreen)
+        // Re-fetch the item from the live window list specifically for this display.
+        let refreshedItems = await MenuBarItem.getMenuBarItems(on: resolvedDisplayID, option: .onScreen)
         let clickItem = refreshedItems.first(where: { $0.tag == item.tag }) ?? item
 
         // Give the owning app a little extra time to finish processing the
@@ -2232,7 +2270,7 @@ extension MenuBarItemManager {
             }
 
             do {
-                try await move(item: item, to: destination, skipInputPause: true)
+                try await move(item: item, to: destination, on: context.displayID, skipInputPause: true)
                 // Successfully rehidden — remove the pending relocation entry.
                 let tagIdentifier = "\(context.tag.namespace):\(context.tag.title)"
                 pendingRelocations.removeValue(forKey: tagIdentifier)

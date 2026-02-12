@@ -405,6 +405,7 @@ private struct IceBarContentView: View {
                             menuBarManager: menuBarManager,
                             item: item,
                             section: section,
+                            displayID: screen.displayID,
                             maxHeight: itemMaxHeight
                         )
                     }
@@ -431,6 +432,7 @@ private struct IceBarItemView: View {
 
     let item: MenuBarItem
     let section: MenuBarSection.Name
+    let displayID: CGDirectDisplayID
     let maxHeight: CGFloat?
 
     private var leftClickAction: () -> Void {
@@ -444,7 +446,7 @@ private struct IceBarItemView: View {
                 if Bridging.isWindowOnScreen(item.windowID) {
                     try await itemManager.click(item: item, with: .left)
                 } else {
-                    await itemManager.temporarilyShow(item: item, clickingWith: .left)
+                    await itemManager.temporarilyShow(item: item, clickingWith: .left, on: displayID)
                 }
             }
         }
@@ -461,7 +463,7 @@ private struct IceBarItemView: View {
                 if Bridging.isWindowOnScreen(item.windowID) {
                     try await itemManager.click(item: item, with: .right)
                 } else {
-                    await itemManager.temporarilyShow(item: item, clickingWith: .right)
+                    await itemManager.temporarilyShow(item: item, clickingWith: .right, on: displayID)
                 }
             }
         }
