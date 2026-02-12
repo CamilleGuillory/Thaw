@@ -277,11 +277,12 @@ private final class MenuBarSearchHostingView: NSHostingView<AnyView> {
     init(
         appState: AppState,
         model: MenuBarSearchModel,
-        displayID _: CGDirectDisplayID,
+        displayID: CGDirectDisplayID,
         panel: MenuBarSearchPanel
     ) {
         super.init(
-            rootView: MenuBarSearchContentView { [weak panel] in panel?.close()
+            rootView: MenuBarSearchContentView(displayID: displayID) { [weak panel] in
+                panel?.close()
             }
             .environmentObject(appState)
             .environmentObject(appState.itemManager)
@@ -309,6 +310,7 @@ private struct MenuBarSearchContentView: View {
     @EnvironmentObject var model: MenuBarSearchModel
     @FocusState private var searchFieldIsFocused: Bool
 
+    let displayID: CGDirectDisplayID
     let closePanel: () -> Void
 
     private var hasItems: Bool {
@@ -502,7 +504,8 @@ private struct MenuBarSearchContentView: View {
             } else {
                 await itemManager.temporarilyShow(
                     item: item,
-                    clickingWith: .left
+                    clickingWith: .left,
+                    on: displayID
                 )
             }
         }
