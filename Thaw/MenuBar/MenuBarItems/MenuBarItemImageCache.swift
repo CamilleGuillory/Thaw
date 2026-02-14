@@ -82,6 +82,9 @@ final class MenuBarItemImageCache: ObservableObject {
     /// Storage for internal observers.
     private var cancellables = Set<AnyCancellable>()
 
+    /// The currently running cache update task, if any.
+    private var currentUpdateTask: Task<Void, Never>?
+
     // MARK: Setup
 
     /// Sets up the cache.
@@ -252,11 +255,13 @@ final class MenuBarItemImageCache: ObservableObject {
                 colorChangePublisher,
                 itemCacheChangePublisher,
             ])
+            .debounce(for: .milliseconds(200), scheduler: DispatchQueue.main)
             .sink { [weak self] _ in
                 guard let self else {
                     return
                 }
-                Task {
+                self.currentUpdateTask?.cancel()
+                self.currentUpdateTask = Task {
                     await self.updateCache()
                 }
             }
@@ -701,6 +706,11 @@ final class MenuBarItemImageCache: ObservableObject {
         var newImages = [MenuBarItemTag: CapturedImage]()
 
         for section in sections {
+            guard !Task.isCancelled else {
+                MenuBarItemImageCache.diagLog.debug("updateCacheWithoutChecks: cancelled before capturing \(section.logString)")
+                return
+            }
+
             guard await !appState.itemManager.itemCache[section].isEmpty else {
                 continue
             }
@@ -719,6 +729,11 @@ final class MenuBarItemImageCache: ObservableObject {
             }
 
             newImages.merge(sectionImages) { _, new in new }
+        }
+
+        guard !Task.isCancelled else {
+            MenuBarItemImageCache.diagLog.debug("updateCacheWithoutChecks: cancelled before applying cache update")
+            return
         }
 
         // Get the set of valid item tags from all sections to clean up stale entries
