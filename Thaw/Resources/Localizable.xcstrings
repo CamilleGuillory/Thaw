@@ -6961,6 +6961,12 @@
             "state" : "translated",
             "value" : "노치가 있는 디스플레이에서만 가능합니다."
           }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "僅在有相機區域的顯示器上"
+          }
         }
       }
     },
@@ -10659,6 +10665,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%@ 바는 노치가 있는 디스플레이에서만 사용됩니다. 다른 디스플레이에서는 메뉴 막대에 아이콘이 표시됩니다."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "僅在有相機區域的顯示器上使用 %@ 列。在其他顯示器上，於選單列中顯示圖像。"
           }
         }
       }
