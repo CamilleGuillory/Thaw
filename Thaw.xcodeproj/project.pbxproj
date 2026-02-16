@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 77;
+	objectVersion = 90;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -29,14 +29,12 @@
 /* Begin PBXCopyFilesBuildPhase section */
 		7188A68D2E27F9ED008F131D /* Embed XPC Services */ = {
 			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
 			dstPath = "$(CONTENTS_FOLDER_PATH)/XPCServices";
-			dstSubfolderSpec = 16;
+			dstSubfolder = Product;
 			files = (
 				7188A68C2E27F9ED008F131D /* MenuBarItemService.xpc in Embed XPC Services */,
 			);
 			name = "Embed XPC Services";
-			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXCopyFilesBuildPhase section */
 
@@ -97,7 +95,6 @@
 /* Begin PBXFrameworksBuildPhase section */
 		716683272A767E6A006ABF84 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
 			files = (
 				170423D92B56DE78004A2549 /* Sparkle in Frameworks */,
 				7127A9FF2C4886D100D99DEF /* IfritStatic in Frameworks */,
@@ -105,15 +102,12 @@
 				1787C4272B16890B002F50DF /* AXSwift in Frameworks */,
 				17F71BB52B880B4500905CBA /* CompactSlider in Frameworks */,
 			);
-			runOnlyForDeploymentPostprocessing = 0;
 		};
 		7188A6802E27F9ED008F131D /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
 			files = (
 				7168EE532E281CBC00FF9830 /* AXSwift in Frameworks */,
 			);
-			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
@@ -181,8 +175,6 @@
 			);
 			buildRules = (
 			);
-			dependencies = (
-			);
 			fileSystemSynchronizedGroups = (
 				7188A6842E27F9ED008F131D /* MenuBarItemService */,
 				7188A69E2E280BB4008F131D /* Shared */,
@@ -237,7 +229,7 @@
 				17F71BB32B880B4500905CBA /* XCRemoteSwiftPackageReference "CompactSlider" */,
 				7127A9FB2C4881BC00D99DEF /* XCRemoteSwiftPackageReference "Ifrit" */,
 			);
-			preferredProjectObjectVersion = 77;
+			preferredProjectObjectVersion = 90;
 			productRefGroup = 7166832B2A767E6A006ABF84 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -251,17 +243,13 @@
 /* Begin PBXResourcesBuildPhase section */
 		716683282A767E6A006ABF84 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
 			files = (
 			);
-			runOnlyForDeploymentPostprocessing = 0;
 		};
 		7188A6812E27F9ED008F131D /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
 			files = (
 			);
-			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
 
@@ -269,38 +257,33 @@
 		1720D48F2BB9B60500A7AC63 /* SwiftLint */ = {
 			isa = PBXShellScriptBuildPhase;
 			alwaysOutOfDate = 1;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-			);
-			inputPaths = (
-			);
 			name = SwiftLint;
-			outputFileListPaths = (
-			);
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "if [[ \"$(uname -m)\" == arm64 ]]; then\n    export PATH=\"/opt/homebrew/bin:$PATH\"\nfi\n\nif which swiftlint > /dev/null; then\n  swiftlint\nelse\n  echo \"warning: SwiftLint not installed, download from https://github.com/realm/SwiftLint\"\nfi\n";
+			shellScript = (
+				"if [[ \"$(uname -m)\" == arm64 ]]; then",
+				"    export PATH=\"/opt/homebrew/bin:$PATH\"",
+				"fi",
+				"",
+				"if which swiftlint > /dev/null; then",
+				"  swiftlint",
+				"else",
+				"  echo \"warning: SwiftLint not installed, download from https://github.com/realm/SwiftLint\"",
+				"fi",
+				"",
+			);
 		};
 /* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		716683262A767E6A006ABF84 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
 			files = (
 			);
-			runOnlyForDeploymentPostprocessing = 0;
 		};
 		7188A67F2E27F9ED008F131D /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
 			files = (
 			);
-			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
 
@@ -313,7 +296,7 @@
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
-		716683372A767E6B006ABF84 /* Debug */ = {
+		716683372A767E6B006ABF84 /* Debug configuration for PBXProject "Thaw" */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
@@ -380,7 +363,7 @@
 			};
 			name = Debug;
 		};
-		716683382A767E6B006ABF84 /* Release */ = {
+		716683382A767E6B006ABF84 /* Release configuration for PBXProject "Thaw" */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
@@ -440,7 +423,7 @@
 			};
 			name = Release;
 		};
-		7166833A2A767E6B006ABF84 /* Debug */ = {
+		7166833A2A767E6B006ABF84 /* Debug configuration for PBXNativeTarget "Thaw" */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
@@ -475,7 +458,7 @@
 			};
 			name = Debug;
 		};
-		7166833B2A767E6B006ABF84 /* Release */ = {
+		7166833B2A767E6B006ABF84 /* Release configuration for PBXNativeTarget "Thaw" */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
@@ -510,7 +493,7 @@
 			};
 			name = Release;
 		};
-		7188A68E2E27F9ED008F131D /* Debug */ = {
+		7188A68E2E27F9ED008F131D /* Debug configuration for PBXNativeTarget "MenuBarItemService" */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
@@ -538,7 +521,7 @@
 			};
 			name = Debug;
 		};
-		7188A68F2E27F9ED008F131D /* Release */ = {
+		7188A68F2E27F9ED008F131D /* Release configuration for PBXNativeTarget "MenuBarItemService" */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
@@ -571,28 +554,25 @@
 		716683252A767E6A006ABF84 /* Build configuration list for PBXProject "Thaw" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				716683372A767E6B006ABF84 /* Debug */,
-				716683382A767E6B006ABF84 /* Release */,
+				716683372A767E6B006ABF84 /* Debug configuration for PBXProject "Thaw" */,
+				716683382A767E6B006ABF84 /* Release configuration for PBXProject "Thaw" */,
 			);
-			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
 		716683392A767E6B006ABF84 /* Build configuration list for PBXNativeTarget "Thaw" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				7166833A2A767E6B006ABF84 /* Debug */,
-				7166833B2A767E6B006ABF84 /* Release */,
+				7166833A2A767E6B006ABF84 /* Debug configuration for PBXNativeTarget "Thaw" */,
+				7166833B2A767E6B006ABF84 /* Release configuration for PBXNativeTarget "Thaw" */,
 			);
-			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
 		7188A6902E27F9ED008F131D /* Build configuration list for PBXNativeTarget "MenuBarItemService" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				7188A68E2E27F9ED008F131D /* Debug */,
-				7188A68F2E27F9ED008F131D /* Release */,
+				7188A68E2E27F9ED008F131D /* Debug configuration for PBXNativeTarget "MenuBarItemService" */,
+				7188A68F2E27F9ED008F131D /* Release configuration for PBXNativeTarget "MenuBarItemService" */,
 			);
-			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
