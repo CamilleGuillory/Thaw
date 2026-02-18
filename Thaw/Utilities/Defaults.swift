@@ -175,6 +175,10 @@ extension Defaults {
         case menuBarSearchPanelFrame = "MenuBarSearchPanelFrame"
         case menuBarSearchPanelFrameWithConfig = "MenuBarSearchPanelFrame_"
 
+        // MARK: Menu Bar Item Custom Names
+
+        case menuBarItemCustomNames = "MenuBarItemCustomNames"
+
         // MARK: Appearance Settings
 
         case menuBarAppearanceConfigurationV2 = "MenuBarAppearanceConfigurationV2"

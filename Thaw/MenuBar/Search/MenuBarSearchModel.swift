@@ -21,6 +21,8 @@ final class MenuBarSearchModel: ObservableObject {
     @Published var displayedItems = [SectionedListItem<ItemID>]()
     @Published var selection: ItemID?
     @Published private(set) var averageColorInfo: MenuBarAverageColorInfo?
+    @Published var editingItemTag: MenuBarItemTag?
+    @Published var editingName: String = ""
 
     private var cancellables = Set<AnyCancellable>()
 

@@ -80,9 +80,8 @@ struct MenuBarItem: CustomStringConvertible {
         return NSRunningApplication(processIdentifier: sourcePID)
     }
 
-    // TODO: Generate this once, during initialization.
-    /// A name associated with the item, suited for display.
-    var displayName: String {
+    /// The auto-detected name for the item (ignores custom name).
+    var autoDetectedName: String {
         /// Converts "UpperCamelCase" to "Title Case".
         ///
         /// Ignores cases where a single lowercase letter immediately
@@ -116,26 +115,17 @@ struct MenuBarItem: CustomStringConvertible {
             return title
         }
 
-        // Most items use their computed "best name", but we handle
-        // a few special cases for system items.
         let displayName = switch tag.namespace {
         case .passwords, .weather, .textInputMenuAgent:
-            // "PasswordsMenuBarExtra" -> "Passwords"
-            // "WeatherMenu" -> "Weather"
-            // "TextInputMenuAgent" -> "Text Input"
             toTitleCase(bestName.replacing(/Menu.*/, with: ""))
         case .controlCenter:
             if let match = title.prefixMatch(of: /Hearing/) {
-                // Changed from "Hearing" to "Hearing_GlowE" in macOS 15.4
                 toTitleCase(match.output)
             } else {
                 toTitleCase(title)
             }
         case .systemUIServer:
             if let match = title.firstMatch(of: /TimeMachine/) {
-                // Sonoma:  "TimeMachine.TMMenuExtraHost"
-                // Sequoia: "TimeMachineMenuExtra.TMMenuExtraHost"
-                // Tahoe:   "com.apple.menuextra.TimeMachine"
                 toTitleCase(match.output)
             } else {
                 toTitleCase(title)
@@ -144,7 +134,6 @@ struct MenuBarItem: CustomStringConvertible {
             bestName
         }
 
-        // Provide some extra context if the name is just a UUID.
         if UUID(uuidString: displayName) != nil, let sourceName {
             return "\(sourceName) (\(displayName))"
         }
@@ -152,9 +141,45 @@ struct MenuBarItem: CustomStringConvertible {
         return displayName
     }
 
+    /// A name associated with the item, suited for display.
+    var displayName: String {
+        // Custom name takes precedence over auto-detected name
+        if let custom = customName, !custom.trimmingCharacters(in: .whitespaces).isEmpty {
+            return custom
+        }
+
+        return autoDetectedName
+    }
+
     /// A textual representation of the item.
     var description: String {
         "\(displayName) (\(tag))"
+    }
+
+    /// A unique identifier for storing custom names.
+    /// Uses windowID as part of the key to ensure stability even when namespace is a UUID.
+    var uniqueIdentifier: String {
+        if tag.namespace.isUUID {
+            return "windowID:\(windowID)"
+        }
+        return "\(tag.namespace):\(tag.title)"
+    }
+
+    /// Custom name for this item (persisted).
+    var customName: String? {
+        get {
+            let names = Defaults.dictionary(forKey: .menuBarItemCustomNames) as? [String: String] ?? [:]
+            return names[uniqueIdentifier]
+        }
+        set {
+            var names = Defaults.dictionary(forKey: .menuBarItemCustomNames) as? [String: String] ?? [:]
+            if let newValue = newValue, !newValue.trimmingCharacters(in: .whitespaces).isEmpty {
+                names[uniqueIdentifier] = newValue
+            } else {
+                names.removeValue(forKey: uniqueIdentifier)
+            }
+            Defaults.set(names, forKey: .menuBarItemCustomNames)
+        }
     }
 
     /// A string to use for logging purposes.
