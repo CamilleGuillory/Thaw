@@ -19,23 +19,37 @@ struct MenuBarItemTag: Hashable, CustomStringConvertible {
     /// The title of the item identified by this tag.
     let title: String
 
+    /// The window identifier of the item identified by this tag.
+    let windowID: CGWindowID?
+
+    /// A Boolean value that indicates whether the item identified
+    /// by this tag is a system item.
+    var isSystemItem: Bool {
+        switch namespace {
+        case .controlCenter, .systemUIServer, .textInputMenuAgent, .weather, .passwords, .screenCaptureUI, .thaw:
+            return true
+        case .string, .uuid, .null:
+            return false
+        }
+    }
+
     /// A Boolean value that indicates whether the item identified
     /// by this tag can be moved.
     var isMovable: Bool {
-        !MenuBarItemTag.immovableItems.contains(self)
+        !MenuBarItemTag.immovableItems.contains(where: { $0.namespace == namespace && $0.title == title })
     }
 
     /// A Boolean value that indicates whether the item identified
     /// by this tag can be hidden.
     var canBeHidden: Bool {
-        !MenuBarItemTag.nonHideableItems.contains(self) &&
+        !MenuBarItemTag.nonHideableItems.contains(where: { $0.namespace == namespace && $0.title == title }) &&
             !(namespace.isUUID && title == "AudioVideoModule")
     }
 
     /// A Boolean value that indicates whether the item identified
     /// by this tag is a control item owned by Ice.
     var isControlItem: Bool {
-        MenuBarItemTag.controlItems.contains(self) ||
+        MenuBarItemTag.controlItems.contains(where: { $0.namespace == namespace && $0.title == title }) ||
             title.contains(".Spacer.")
     }
 
@@ -58,13 +72,41 @@ struct MenuBarItemTag: Hashable, CustomStringConvertible {
         if !title.isEmpty {
             result.append(":\(title)")
         }
+        if let windowID, !isSystemItem {
+            result.append(" (windowID: \(windowID))")
+        }
         return result
     }
 
-    /// Creates a tag with the given namespace and title.
-    init(namespace: Namespace, title: String) {
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(namespace)
+        hasher.combine(title)
+        if !isSystemItem {
+            hasher.combine(windowID)
+        }
+    }
+
+    static func == (lhs: MenuBarItemTag, rhs: MenuBarItemTag) -> Bool {
+        if lhs.namespace != rhs.namespace || lhs.title != rhs.title {
+            return false
+        }
+        if lhs.isSystemItem {
+            return true
+        }
+        return lhs.windowID == rhs.windowID
+    }
+
+    /// Returns a Boolean value that indicates whether the given tag
+    /// matches this tag, ignoring their window identifiers.
+    func matchesIgnoringWindowID(_ other: MenuBarItemTag) -> Bool {
+        namespace == other.namespace && title == other.title
+    }
+
+    /// Creates a tag with the given namespace, title, and window identifier.
+    init(namespace: Namespace, title: String, windowID: CGWindowID? = nil) {
         self.namespace = namespace
         self.title = title
+        self.windowID = windowID
     }
 
     /// Creates a tag for the control item with the given identifier.

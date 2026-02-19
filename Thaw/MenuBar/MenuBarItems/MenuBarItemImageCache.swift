@@ -192,7 +192,7 @@ final class MenuBarItemImageCache: ObservableObject {
 
                     let namespace = String(parts[0])
                     let title = String(parts[1])
-                    let tag = MenuBarItemTag(namespace: .string(namespace), title: title)
+                    let tag = MenuBarItemTag(namespace: .string(namespace), title: title, windowID: nil)
 
                     let captured = CapturedImage(cgImage: cgImage, scale: image.size.width > 0 ? CGFloat(cgImage.width) / image.size.width : 1.0)
                     loadedImages[tag] = captured
@@ -587,12 +587,24 @@ final class MenuBarItemImageCache: ObservableObject {
     }
 
     /// Gets an image from the cache and updates its access order.
+    ///
+    /// For non-system items, falls back to a namespace+title match if the
+    /// exact tag (including windowID) is not found. This handles disk-loaded
+    /// entries where the windowID is unavailable.
     func image(for tag: MenuBarItemTag) -> CapturedImage? {
-        guard let image = images[tag] else {
-            return nil
+        if let image = images[tag] {
+            updateAccessOrder(for: tag)
+            return image
         }
-        updateAccessOrder(for: tag)
-        return image
+        // Fallback: match by namespace and title only (ignoring windowID).
+        // This covers disk-loaded entries that were stored without a windowID.
+        if !tag.isSystemItem,
+           let entry = images.first(where: { $0.key.matchesIgnoringWindowID(tag) })
+        {
+            updateAccessOrder(for: entry.key)
+            return entry.value
+        }
+        return nil
     }
 
     /// Returns the current cache size for monitoring purposes.
@@ -623,8 +635,20 @@ final class MenuBarItemImageCache: ObservableObject {
         // or have invalid/missing window information, but keep entries that
         // are explicitly preserved (e.g. items with recent capture failures
         // whose cached image should be retained).
+        // Use matchesIgnoringWindowID for non-system items so disk-loaded
+        // entries (which have no windowID) are not incorrectly evicted.
         let invalidTags = images.keys.filter { tag in
-            !allValidTags.contains(tag) && !preservedTags.contains(tag)
+            let isValid = if tag.isSystemItem {
+                allValidTags.contains(tag)
+            } else {
+                allValidTags.contains(where: { $0.matchesIgnoringWindowID(tag) })
+            }
+            let isPreserved = if tag.isSystemItem {
+                preservedTags.contains(tag)
+            } else {
+                preservedTags.contains(where: { $0.matchesIgnoringWindowID(tag) })
+            }
+            return !isValid && !isPreserved
         }
 
         for invalidTag in invalidTags {
@@ -759,8 +783,14 @@ final class MenuBarItemImageCache: ObservableObject {
             // Remove images for items that no longer exist in the item cache,
             // but preserve images for items that have recent capture failures
             // (they may reappear shortly with a new window ID).
-            images = images.filter {
-                allValidTags.contains($0.key) || recentlyFailedTags.contains($0.key)
+            // Use matchesIgnoringWindowID for non-system items so disk-loaded
+            // entries are not incorrectly evicted when their windowID is nil.
+            images = images.filter { key, _ in
+                if key.isSystemItem {
+                    return allValidTags.contains(key) || recentlyFailedTags.contains(key)
+                }
+                return allValidTags.contains(where: { $0.matchesIgnoringWindowID(key) }) ||
+                    recentlyFailedTags.contains(where: { $0.matchesIgnoringWindowID(key) })
             }
 
             // Additional cleanup: Remove entries with invalid window information,
