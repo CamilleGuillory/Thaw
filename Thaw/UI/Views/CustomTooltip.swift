@@ -15,6 +15,10 @@ import Cocoa
 final class CustomTooltipPanel: NSPanel {
     static let shared = CustomTooltipPanel()
 
+    /// An opaque token identifying the current owner of the tooltip.
+    /// Only the owner that showed the tooltip can dismiss it.
+    private(set) var currentOwner: AnyHashable?
+
     private let label: NSTextField = {
         let field = NSTextField(labelWithString: "")
         field.font = .toolTipsFont(ofSize: NSFont.smallSystemFontSize)
@@ -77,7 +81,10 @@ final class CustomTooltipPanel: NSPanel {
     }
 
     /// Shows the tooltip with the given text near the specified screen point.
-    func show(text: String, near point: CGPoint, in screen: NSScreen?) {
+    /// The `owner` token is used to prevent other callers from dismissing
+    /// a tooltip they didn't show.
+    func show(text: String, near point: CGPoint, in screen: NSScreen?, owner: AnyHashable? = nil) {
+        currentOwner = owner
         label.stringValue = text
         label.sizeToFit()
 
@@ -107,7 +114,14 @@ final class CustomTooltipPanel: NSPanel {
     }
 
     /// Hides the tooltip immediately.
-    func dismiss() {
+    ///
+    /// If `owner` is provided, the tooltip is only dismissed when the
+    /// current owner matches. Pass `nil` to dismiss unconditionally.
+    func dismiss(owner: AnyHashable? = nil) {
+        if let owner, let currentOwner, owner != currentOwner {
+            return
+        }
+        currentOwner = nil
         orderOut(nil)
     }
 }
@@ -122,6 +136,9 @@ final class CustomTooltipPanel: NSPanel {
 final class CustomTooltipController {
     private var timer: Timer?
     private weak var view: NSView?
+
+    /// A unique identifier for this controller, used as the tooltip owner token.
+    private let id = UUID()
 
     /// The text to display in the tooltip.
     var text: String
@@ -148,7 +165,7 @@ final class CustomTooltipController {
     func cancel() {
         timer?.invalidate()
         timer = nil
-        CustomTooltipPanel.shared.dismiss()
+        CustomTooltipPanel.shared.dismiss(owner: id)
     }
 
     private func showNow() {
@@ -162,7 +179,8 @@ final class CustomTooltipController {
         CustomTooltipPanel.shared.show(
             text: text,
             near: screenPoint,
-            in: window.screen
+            in: window.screen,
+            owner: id
         )
     }
 }

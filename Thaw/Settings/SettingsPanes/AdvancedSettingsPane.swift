@@ -46,6 +46,7 @@ struct AdvancedSettingsPane: View {
                 enableSecondaryContextMenu
                 showOnHoverDelay
                 tooltipDelay
+                showMenuBarTooltips
             }
             IceSection("Permissions") {
                 allPermissions
@@ -148,6 +149,11 @@ struct AdvancedSettingsPane: View {
                 }
         }
         .annotation("The amount of time to wait before showing a tooltip over a menu bar item.")
+    }
+
+    private var showMenuBarTooltips: some View {
+        Toggle("Show tooltips in the menu bar", isOn: $settings.showMenuBarTooltips)
+            .annotation("Show a tooltip when hovering over menu bar items in the actual menu bar.")
     }
 
     private var diagnosticLogging: some View {
