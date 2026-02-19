@@ -457,6 +457,7 @@ private struct MenuBarSearchContentView: View {
             .font(.system(size: 18))
             .padding(15)
             .focused($searchFieldIsFocused)
+            .textContentType(.none)
             .autocorrectionDisabled(true)
 
             Divider()
@@ -764,6 +765,7 @@ private struct MenuBarSearchItemView: View {
                         .textFieldStyle(.plain)
                         .foregroundColor(.primary)
                         .focused($isEditing)
+                        .textContentType(.none)
                         .autocorrectionDisabled(true)
                         .onSubmit {
                             panel?.saveEditingName()
