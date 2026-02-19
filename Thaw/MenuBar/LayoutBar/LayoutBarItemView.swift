@@ -20,6 +20,9 @@ final class LayoutBarItemView: NSView {
     /// The item that the view represents.
     let item: MenuBarItem
 
+    private lazy var tooltipController = CustomTooltipController(text: item.displayName, view: self)
+    private var tooltipTrackingArea: NSTrackingArea?
+
     /// Temporary information that the item view retains when it is moved outside
     /// of a layout view.
     ///
@@ -71,7 +74,6 @@ final class LayoutBarItemView: NSView {
         super.init(frame: CGRect(origin: .zero, size: item.bounds.size))
         unregisterDraggedTypes()
 
-        self.toolTip = item.displayName
         self.isEnabled = item.isMovable
 
         configureCancellables()
@@ -80,6 +82,35 @@ final class LayoutBarItemView: NSView {
     @available(*, unavailable)
     required init?(coder _: NSCoder) {
         fatalError("init(coder:) has not been implemented")
+    }
+
+    private var tooltipDelay: TimeInterval {
+        appState?.settings.advanced.tooltipDelay ?? 0.5
+    }
+
+    override func updateTrackingAreas() {
+        super.updateTrackingAreas()
+        if let tooltipTrackingArea {
+            removeTrackingArea(tooltipTrackingArea)
+        }
+        let area = NSTrackingArea(
+            rect: bounds,
+            options: [.mouseEnteredAndExited, .activeAlways],
+            owner: self,
+            userInfo: nil
+        )
+        addTrackingArea(area)
+        tooltipTrackingArea = area
+    }
+
+    override func mouseEntered(with event: NSEvent) {
+        super.mouseEntered(with: event)
+        tooltipController.scheduleShow(delay: tooltipDelay)
+    }
+
+    override func mouseExited(with event: NSEvent) {
+        super.mouseExited(with: event)
+        tooltipController.cancel()
     }
 
     private func configureCancellables() {
@@ -144,6 +175,7 @@ final class LayoutBarItemView: NSView {
 
     override func mouseDragged(with event: NSEvent) {
         super.mouseDragged(with: event)
+        tooltipController.cancel()
 
         guard isEnabled else {
             let alert = provideAlertForDisabledItem()

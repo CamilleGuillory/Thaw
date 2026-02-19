@@ -45,6 +45,7 @@ struct AdvancedSettingsPane: View {
                 hideApplicationMenus
                 enableSecondaryContextMenu
                 showOnHoverDelay
+                tooltipDelay
             }
             IceSection("Permissions") {
                 allPermissions
@@ -128,6 +129,25 @@ struct AdvancedSettingsPane: View {
                 }
         }
         .annotation("The amount of time to wait before showing on hover.")
+    }
+
+    private var tooltipDelay: some View {
+        LabeledContent {
+            IceSlider(
+                value: $settings.tooltipDelay,
+                in: 0 ... 1,
+                step: 0.1
+            ) {
+                SecondsLabel(value: settings.tooltipDelay)
+            }
+        } label: {
+            Text("Tooltip delay")
+                .frame(minWidth: maxSliderLabelWidth, alignment: .leading)
+                .onFrameChange { frame in
+                    maxSliderLabelWidth = max(maxSliderLabelWidth, frame.width)
+                }
+        }
+        .annotation("The amount of time to wait before showing a tooltip over a menu bar item.")
     }
 
     private var diagnosticLogging: some View {

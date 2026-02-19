@@ -402,7 +402,8 @@ private struct IceBarContentView: View {
                             item: item,
                             section: section,
                             displayID: screen.displayID,
-                            maxHeight: itemMaxHeight
+                            maxHeight: itemMaxHeight,
+                            tooltipDelay: appState.settings.advanced.tooltipDelay
                         )
                     }
                 }
@@ -430,6 +431,7 @@ private struct IceBarItemView: View {
     let section: MenuBarSection.Name
     let displayID: CGDirectDisplayID
     let maxHeight: CGFloat?
+    let tooltipDelay: TimeInterval
 
     private var leftClickAction: () -> Void {
         return { [weak itemManager, weak menuBarManager] in
@@ -504,6 +506,7 @@ private struct IceBarItemView: View {
                 .overlay {
                     IceBarItemClickView(
                         item: item,
+                        tooltipDelay: tooltipDelay,
                         leftClickAction: leftClickAction,
                         rightClickAction: rightClickAction
                     )
@@ -520,6 +523,7 @@ private struct IceBarItemView: View {
 private struct IceBarItemClickView: NSViewRepresentable {
     private final class Represented: NSView {
         let item: MenuBarItem
+        let tooltipDelay: TimeInterval
 
         let leftClickAction: () -> Void
         let rightClickAction: () -> Void
@@ -530,16 +534,20 @@ private struct IceBarItemClickView: NSViewRepresentable {
         private var lastLeftMouseDownLocation = CGPoint.zero
         private var lastRightMouseDownLocation = CGPoint.zero
 
+        private lazy var tooltipController = CustomTooltipController(text: item.displayName, view: self)
+        private var tooltipTrackingArea: NSTrackingArea?
+
         init(
             item: MenuBarItem,
+            tooltipDelay: TimeInterval,
             leftClickAction: @escaping () -> Void,
             rightClickAction: @escaping () -> Void
         ) {
             self.item = item
+            self.tooltipDelay = tooltipDelay
             self.leftClickAction = leftClickAction
             self.rightClickAction = rightClickAction
             super.init(frame: .zero)
-            self.toolTip = item.displayName
         }
 
         @available(*, unavailable)
@@ -547,14 +555,41 @@ private struct IceBarItemClickView: NSViewRepresentable {
             fatalError("init(coder:) has not been implemented")
         }
 
+        override func updateTrackingAreas() {
+            super.updateTrackingAreas()
+            if let tooltipTrackingArea {
+                removeTrackingArea(tooltipTrackingArea)
+            }
+            let area = NSTrackingArea(
+                rect: bounds,
+                options: [.mouseEnteredAndExited, .activeAlways],
+                owner: self,
+                userInfo: nil
+            )
+            addTrackingArea(area)
+            tooltipTrackingArea = area
+        }
+
+        override func mouseEntered(with event: NSEvent) {
+            super.mouseEntered(with: event)
+            tooltipController.scheduleShow(delay: tooltipDelay)
+        }
+
+        override func mouseExited(with event: NSEvent) {
+            super.mouseExited(with: event)
+            tooltipController.cancel()
+        }
+
         override func mouseDown(with event: NSEvent) {
             super.mouseDown(with: event)
+            tooltipController.cancel()
             lastLeftMouseDownDate = .now
             lastLeftMouseDownLocation = NSEvent.mouseLocation
         }
 
         override func rightMouseDown(with event: NSEvent) {
             super.rightMouseDown(with: event)
+            tooltipController.cancel()
             lastRightMouseDownDate = .now
             lastRightMouseDownLocation = NSEvent.mouseLocation
         }
@@ -583,6 +618,7 @@ private struct IceBarItemClickView: NSViewRepresentable {
     }
 
     let item: MenuBarItem
+    let tooltipDelay: TimeInterval
 
     let leftClickAction: () -> Void
     let rightClickAction: () -> Void
@@ -590,6 +626,7 @@ private struct IceBarItemClickView: NSViewRepresentable {
     func makeNSView(context _: Context) -> NSView {
         Represented(
             item: item,
+            tooltipDelay: tooltipDelay,
             leftClickAction: leftClickAction,
             rightClickAction: rightClickAction
         )

@@ -168,6 +168,7 @@ extension Defaults {
         case hideApplicationMenus = "HideApplicationMenus"
         case enableSecondaryContextMenu = "EnableSecondaryContextMenu"
         case showOnHoverDelay = "ShowOnHoverDelay"
+        case tooltipDelay = "TooltipDelay"
         case enableDiagnosticLogging = "EnableDiagnosticLogging"
 
         // MARK: Internal
