@@ -157,12 +157,12 @@ struct MenuBarItem: CustomStringConvertible {
     }
 
     /// A unique identifier for storing custom names.
-    /// Uses windowID as part of the key for non-system items to ensure stability and support multiple accounts.
+    ///
+    /// Uses `namespace:title` only — windowID is intentionally excluded
+    /// because it is transient and changes between app restarts, which
+    /// would cause persisted custom names to be lost.
     var uniqueIdentifier: String {
-        if tag.isSystemItem {
-            return "\(tag.namespace):\(tag.title)"
-        }
-        return "\(tag.namespace):\(tag.title):\(windowID)"
+        "\(tag.namespace):\(tag.title)"
     }
 
     /// Custom name for this item (persisted).
@@ -470,6 +470,14 @@ extension MenuBarItemTag.Namespace {
         // which are more likely not to have a bundle ID.
         if let sourcePID, let app = NSRunningApplication(processIdentifier: sourcePID) {
             self = .optional(app.bundleIdentifier ?? app.localizedName)
+        } else if let app = itemWindow.owningApplication {
+            // Fallback: use the owning application's bundle ID or name.
+            // This covers cases where the source PID doesn't resolve
+            // (e.g. helper processes) but the owner is known.
+            self = .optional(app.bundleIdentifier ?? itemWindow.ownerName ?? app.localizedName)
+        } else if let ownerName = itemWindow.ownerName {
+            // Last resort: use the process name as a stable identifier.
+            self = .string(ownerName)
         } else if let uuid = Self.uuidCache[itemWindow.windowID] {
             self = .uuid(uuid)
         } else {
