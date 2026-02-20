@@ -115,7 +115,7 @@ final class SourcePIDCache {
 
         /// Reorders the cached apps so that those that are confirmed
         /// to have an extras menu bar are first in the array.
-        private mutating func partitionApps() {
+        mutating func partitionApps() {
             var lhs = [CachedApplication]()
             var rhs = [CachedApplication]()
 
@@ -141,6 +141,9 @@ final class SourcePIDCache {
 
     /// The cache's protected state.
     private let state = OSAllocatedUnfairLock(initialState: State())
+
+    /// Lock to prevent multiple concurrent full scans of all applications.
+    private let scanLock = NSLock()
 
     /// Observer for running applications.
     private lazy var cancellable: AnyCancellable = {
@@ -230,7 +233,19 @@ final class SourcePIDCache {
             return pid
         }
 
-        SourcePIDCache.diagLog.debug("SourcePIDCache.pid: cache miss for windowID \(window.windowID) title=\(window.title ?? "nil"), resolving via AX API")
+        SourcePIDCache.diagLog.debug("SourcePIDCache.pid: cache miss for windowID \(window.windowID) title=\(window.title ?? "nil"), acquiring scan lock")
+
+        // Use a lock to ensure that only one thread performs the full AX traversal.
+        // This is critical when resolving many windows (e.g. 64) concurrently.
+        scanLock.lock()
+        defer { scanLock.unlock() }
+
+        // Re-check cache after acquiring the scan lock, as it may have been populated
+        // by another thread that just finished a full scan.
+        if let pid = state.withLock({ $0.pids[window.windowID] }) {
+            SourcePIDCache.diagLog.debug("SourcePIDCache.pid: cache hit after scan lock for windowID \(window.windowID) -> PID \(pid)")
+            return pid
+        }
 
         let isTrusted = AXHelpers.isProcessTrusted()
         guard isTrusted else {
@@ -238,49 +253,26 @@ final class SourcePIDCache {
             return nil
         }
 
-        // Get stable bounds without holding the lock.
-        // We use a temporary State just to call the private stableBounds method.
-        // Or better, just move the logic here.
-        var cachedBounds = window.bounds
-        var finalBounds: CGRect?
+        SourcePIDCache.diagLog.debug("SourcePIDCache.pid: performing batch resolution via AX API")
 
-        for n in 1 ... 5 {
-            guard let currentBounds = window.currentBounds() else {
-                SourcePIDCache.diagLog.debug("SourcePIDCache.pid: currentBounds() returned nil for windowID \(window.windowID) on attempt \(n) — window may no longer exist")
-                return nil
-            }
-            if currentBounds == cachedBounds {
-                finalBounds = currentBounds
-                break
-            }
-            cachedBounds = currentBounds
-            Thread.sleep(forTimeInterval: TimeInterval(n) / 100)
-        }
-
-        guard let windowBounds = finalBounds else {
-            SourcePIDCache.diagLog.warning("SourcePIDCache.pid: bounds did not stabilize for windowID \(window.windowID)")
-            return nil
-        }
+        // Fetch all current menu bar item windows to perform a single batch resolution.
+        // This avoids doing the O(W*A*C) work (Windows * Apps * Children) for every request.
+        let allWindows = WindowInfo.createMenuBarWindows(option: .itemsOnly)
+        SourcePIDCache.diagLog.debug("SourcePIDCache.pid: batch resolving for \(allWindows.count) windows")
 
         // Get a copy of the apps list to iterate over without holding the state lock.
         let apps = state.withLock { state -> [CachedApplication] in
-            // Re-order apps to favor those with known extras bars.
-            var lhs = [CachedApplication]()
-            var rhs = [CachedApplication]()
-            for app in state.apps {
-                if app.hasExtrasMenuBar { lhs.append(app) } else { rhs.append(app) }
-            }
-            state.apps = lhs + rhs
+            state.partitionApps()
             return state.apps
         }
 
         var appsChecked = 0
         var appsWithBar = 0
         var totalChildrenChecked = 0
+        var totalMatchesFound = 0
 
         for app in apps {
             appsChecked += 1
-            // This is slow and performs AX calls.
             guard let bar = app.getOrCreateExtrasMenuBar() else {
                 continue
             }
@@ -288,25 +280,28 @@ final class SourcePIDCache {
             let children = AXHelpers.children(for: bar)
             for child in children {
                 totalChildrenChecked += 1
-                guard AXHelpers.isEnabled(child) else {
-                    continue
-                }
-                guard
-                    let childFrame = AXHelpers.frame(for: child),
-                    childFrame.center.distance(to: windowBounds.center) <= 1
+                guard AXHelpers.isEnabled(child),
+                      let childFrame = AXHelpers.frame(for: child)
                 else {
                     continue
                 }
 
-                // Match found! Update the cache.
-                let pid = app.processIdentifier
-                state.withLock { $0.pids[window.windowID] = pid }
-                SourcePIDCache.diagLog.debug("SourcePIDCache.pid: matched windowID \(window.windowID) to PID \(pid) (checked \(appsChecked) apps, \(appsWithBar) with extras bar, \(totalChildrenChecked) children)")
-                return pid
+                let childCenter = childFrame.center
+
+                // Match this child to ANY window in our list.
+                if let matchedWindow = allWindows.first(where: {
+                    $0.bounds.center.distance(to: childCenter) <= 1
+                }) {
+                    totalMatchesFound += 1
+                    let pid = app.processIdentifier
+                    state.withLock { $0.pids[matchedWindow.windowID] = pid }
+                }
             }
         }
 
-        SourcePIDCache.diagLog.debug("SourcePIDCache.pid: no match found for windowID \(window.windowID) bounds=\(NSStringFromRect(windowBounds)) (checked \(appsChecked) apps, \(appsWithBar) with extras bar, \(totalChildrenChecked) children)")
-        return nil
+        let finalPID = state.withLock { $0.pids[window.windowID] }
+        SourcePIDCache.diagLog.debug("SourcePIDCache.pid: batch resolution finished. Found \(totalMatchesFound) matches. Requested windowID \(window.windowID) -> PID \(finalPID.map { "\($0)" } ?? "nil") (checked \(appsChecked) apps, \(appsWithBar) with extras bar, \(totalChildrenChecked) children)")
+
+        return finalPID
     }
 }

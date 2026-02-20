@@ -261,12 +261,7 @@ extension MenuBarItem {
 
         let displayBounds = display.map { CGDisplayBounds($0) }
 
-        let windows = rawWindowIDs.reversed().compactMap { windowID -> WindowInfo? in
-            guard let window = WindowInfo(windowID: windowID) else {
-                diagLog.warning("getMenuBarItemWindows: WindowInfo init failed for windowID \(windowID)")
-                return nil
-            }
-
+        let windows = WindowInfo.createWindows(from: rawWindowIDs.reversed()).compactMap { window -> WindowInfo? in
             if let displayBounds {
                 // Hidden items are pushed far off-screen horizontally, but they maintain
                 // their vertical (Y) coordinate. Filter by the display's Y range.
