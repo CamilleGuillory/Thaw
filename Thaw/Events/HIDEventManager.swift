@@ -222,12 +222,13 @@ final class HIDEventManager: ObservableObject {
         // when accessibility permissions change. If it becomes invalid,
         // ensureValid() will recreate it.
         healthCheckTimer?.invalidate()
-        healthCheckTimer = Timer.scheduledTimer(withTimeInterval: 10, repeats: true) { [weak self] _ in
+        healthCheckTimer = Timer.scheduledTimer(withTimeInterval: 30, repeats: true) { [weak self] _ in
             guard let self else { return }
             Task { @MainActor in
                 self.performHealthCheck()
             }
         }
+        healthCheckTimer?.tolerance = 5
     }
 
     /// Checks the health of event monitors and taps, and attempts
@@ -239,7 +240,7 @@ final class HIDEventManager: ObservableObject {
         // due to a cancelled Task or unexpected error. Force recovery.
         if !isEnabled, disableCount > 0, let lastStop = lastStopTimestamp {
             let elapsed = ContinuousClock.now - lastStop
-            if elapsed > .seconds(10) {
+            if elapsed > .seconds(30) {
                 Self.diagLog.error(
                     """
                     Event manager stuck in disabled state for \

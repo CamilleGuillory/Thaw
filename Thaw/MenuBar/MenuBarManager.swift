@@ -42,6 +42,9 @@ final class MenuBarManager: ObservableObject {
     /// Storage for internal observers.
     private var cancellables = Set<AnyCancellable>()
 
+    /// Cancellable for the periodic average-color refresh, active only while settings is visible.
+    private var averageColorRefreshCancellable: AnyCancellable?
+
     /// A Boolean value that indicates whether the application menus are hidden.
     private var isHidingApplicationMenus = false
 
@@ -82,6 +85,8 @@ final class MenuBarManager: ObservableObject {
 
     /// Configures the internal observers for the manager.
     private func configureCancellables() {
+        averageColorRefreshCancellable?.cancel()
+        averageColorRefreshCancellable = nil
         var c = Set<AnyCancellable>()
 
         NSApp.publisher(for: \.currentSystemPresentationOptions)
@@ -168,11 +173,25 @@ final class MenuBarManager: ObservableObject {
 
         $settingsWindow
             .removeNil()
-            .flatMap { $0.publisher(for: \.isVisible) }
-            .discardMerge(Timer.publish(every: 60, on: .main, in: .default).autoconnect())
+            .map { $0.publisher(for: \.isVisible) }
+            .switchToLatest()
+            .removeDuplicates()
             .receive(on: DispatchQueue.main)
-            .sink { [weak self] in
-                self?.updateAverageColorInfo()
+            .sink { [weak self] isVisible in
+                guard let self else { return }
+                if isVisible {
+                    updateAverageColorInfo()
+                    // Start a visibility-gated 60s refresh to catch wallpaper changes
+                    // (macOS no longer posts a wallpaper change notification).
+                    averageColorRefreshCancellable = Timer.publish(every: 60, tolerance: 10, on: .main, in: .default)
+                        .autoconnect()
+                        .sink { [weak self] _ in
+                            self?.updateAverageColorInfo()
+                        }
+                } else {
+                    averageColorRefreshCancellable?.cancel()
+                    averageColorRefreshCancellable = nil
+                }
             }
             .store(in: &c)
 
