@@ -221,8 +221,8 @@ struct PermissionsView: View {
                             .fontWeight(.medium)
                         Text("Icon positions cannot be restored.")
                             .font(.calloutBox)
-                            .fontWeight(.bold)
-                            .foregroundColor(.red)
+                            .bold()
+                            .foregroundStyle(.red)
                     }
                 }
 
