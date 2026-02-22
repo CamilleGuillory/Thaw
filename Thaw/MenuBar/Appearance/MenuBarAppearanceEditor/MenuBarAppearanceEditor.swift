@@ -95,6 +95,7 @@ struct MenuBarAppearanceEditor: View {
             IceSection("Menu Bar Shape") {
                 shapePicker
                 isInset
+                drawsWallpaperToggle
             }
         }
     }
@@ -158,6 +159,17 @@ struct MenuBarAppearanceEditor: View {
                 "Use inset shape on screens with notch",
                 isOn: $appearanceManager.configuration.isInset
             )
+        }
+    }
+
+    @ViewBuilder
+    private var drawsWallpaperToggle: some View {
+        if appearanceManager.configuration.shapeKind != .noShape {
+            Toggle(
+                "Show menu bar background",
+                isOn: $appearanceManager.configuration.showsMenuBarBackground
+            )
+            .annotation("Shows the system's menu bar background. Enable this if you use a dynamic wallpaper or have 'Show menu bar background' disabled in System Settings.")
         }
     }
 }

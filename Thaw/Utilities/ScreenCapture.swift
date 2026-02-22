@@ -112,4 +112,20 @@ enum ScreenCapture {
     static func captureWindow(with windowID: CGWindowID, screenBounds: CGRect? = nil, option: CGWindowImageOption = []) -> CGImage? {
         captureWindows(with: [windowID], screenBounds: screenBounds, option: option)
     }
+
+    /// Captures a composite image of all windows below the specified window.
+    ///
+    /// - Parameters:
+    ///   - windowID: The identifier of the window to capture below.
+    ///   - screenBounds: The bounds to capture, specified in screen coordinates.
+    ///   - option: Options that specify which parts of the windows are captured.
+    static func captureScreenBelowWindow(with windowID: CGWindowID, screenBounds: CGRect, option: CGWindowImageOption = []) -> CGImage? {
+        let image = CGWindowListCreateImage(screenBounds, .optionOnScreenBelowWindow, windowID, option)
+        if let image {
+            diagLog.debug("captureScreenBelowWindow: captured windows below \(windowID) -> \(image.width)x\(image.height) image")
+        } else {
+            diagLog.warning("captureScreenBelowWindow: CGWindowListCreateImage returned nil for window \(windowID)")
+        }
+        return image
+    }
 }

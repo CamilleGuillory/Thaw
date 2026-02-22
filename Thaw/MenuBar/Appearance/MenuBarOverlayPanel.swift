@@ -376,10 +376,6 @@ final class MenuBarOverlayPanel: NSPanel {
             return
         }
         guard
-            let wallpaperWindow = WindowInfo.wallpaperWindow(
-                from: windows,
-                for: display
-            ),
             let menuBarWindow = WindowInfo.menuBarWindow(
                 from: windows,
                 for: display
@@ -387,8 +383,8 @@ final class MenuBarOverlayPanel: NSPanel {
         else {
             return
         }
-        let wallpaper = ScreenCapture.captureWindow(
-            with: wallpaperWindow.windowID,
+        let wallpaper = ScreenCapture.captureScreenBelowWindow(
+            with: menuBarWindow.windowID,
             screenBounds: menuBarWindow.bounds,
             option: .nominalResolution
         )
@@ -809,7 +805,10 @@ private final class MenuBarOverlayPanelContentView: NSView {
     private func drawTint(in rect: CGRect) {
         switch configuration.tintKind {
         case .noTint:
-            break
+            if fullConfiguration.showsMenuBarBackground {
+                NSColor.black.withAlphaComponent(0.2).setFill()
+                rect.fill()
+            }
         case .solid:
             if let tintColor = NSColor(cgColor: configuration.tintColor)?
                 .withAlphaComponent(0.2)
@@ -889,7 +888,9 @@ private final class MenuBarOverlayPanelContentView: NSView {
                 NSBezierPath(rect: borderBounds).fill()
             }
         case .full, .split:
-            if let desktopWallpaper = overlayPanel.desktopWallpaper {
+            if !fullConfiguration.showsMenuBarBackground,
+               let desktopWallpaper = overlayPanel.desktopWallpaper
+            {
                 context.saveGraphicsState()
                 defer {
                     context.restoreGraphicsState()

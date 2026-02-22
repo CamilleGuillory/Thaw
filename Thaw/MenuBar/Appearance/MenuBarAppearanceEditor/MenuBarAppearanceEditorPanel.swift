@@ -183,7 +183,7 @@ private final class MenuBarAppearanceEditorHostingController: NSHostingControlle
         }
         let configuration = appState.appearanceManager.configuration
         let baseHeight: CGFloat = configuration.isDynamic ? 630 : 420
-        let shapeBonus: CGFloat = configuration.shapeKind == .noShape ? 0 : 65
+        let shapeBonus: CGFloat = configuration.shapeKind == .noShape ? 0 : 150
         let headingBonus: CGFloat = 32
         preferredContentSize = NSSize(width: 500, height: baseHeight + shapeBonus + headingBonus)
         view.setFrameSize(preferredContentSize)

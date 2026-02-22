@@ -17,6 +17,7 @@ struct MenuBarAppearanceConfigurationV2: Hashable {
     var splitShapeInfo: MenuBarSplitShapeInfo
     var isInset: Bool
     var isDynamic: Bool
+    var showsMenuBarBackground: Bool
 
     var hasRoundedShape: Bool {
         switch shapeKind {
@@ -49,7 +50,8 @@ extension MenuBarAppearanceConfigurationV2 {
         fullShapeInfo: .default,
         splitShapeInfo: .default,
         isInset: true,
-        isDynamic: false
+        isDynamic: false,
+        showsMenuBarBackground: false
     )
 }
 
@@ -63,6 +65,7 @@ extension MenuBarAppearanceConfigurationV2: Codable {
         case splitShapeInfo
         case isInset
         case isDynamic
+        case showsMenuBarBackground
     }
 
     init(from decoder: any Decoder) throws {
@@ -75,7 +78,8 @@ extension MenuBarAppearanceConfigurationV2: Codable {
             fullShapeInfo: container.decodeIfPresent(MenuBarFullShapeInfo.self, forKey: .fullShapeInfo) ?? Self.defaultConfiguration.fullShapeInfo,
             splitShapeInfo: container.decodeIfPresent(MenuBarSplitShapeInfo.self, forKey: .splitShapeInfo) ?? Self.defaultConfiguration.splitShapeInfo,
             isInset: container.decodeIfPresent(Bool.self, forKey: .isInset) ?? Self.defaultConfiguration.isInset,
-            isDynamic: container.decodeIfPresent(Bool.self, forKey: .isDynamic) ?? Self.defaultConfiguration.isDynamic
+            isDynamic: container.decodeIfPresent(Bool.self, forKey: .isDynamic) ?? Self.defaultConfiguration.isDynamic,
+            showsMenuBarBackground: container.decodeIfPresent(Bool.self, forKey: .showsMenuBarBackground) ?? Self.defaultConfiguration.showsMenuBarBackground
         )
     }
 
@@ -89,6 +93,7 @@ extension MenuBarAppearanceConfigurationV2: Codable {
         try container.encode(splitShapeInfo, forKey: .splitShapeInfo)
         try container.encode(isInset, forKey: .isInset)
         try container.encode(isDynamic, forKey: .isDynamic)
+        try container.encode(showsMenuBarBackground, forKey: .showsMenuBarBackground)
     }
 }
 
