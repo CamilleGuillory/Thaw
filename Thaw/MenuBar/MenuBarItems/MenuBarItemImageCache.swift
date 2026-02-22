@@ -503,8 +503,8 @@ final class MenuBarItemImageCache: ObservableObject {
     /// Lightweight image refresh for the IceBar.
     ///
     /// Performs a single composite capture and crops individual items,
-    /// skipping full cache management (LRU, failure tracking, transparency
-    /// checks, cleanup). Designed for high-frequency refresh (~30fps).
+    /// skipping full cache management (LRU, failure tracking, cleanup).
+    /// Skips `@Published` updates when images haven't changed visually.
     nonisolated func refreshImages(
         of items: [MenuBarItem],
         scale: CGFloat
@@ -530,9 +530,9 @@ final class MenuBarItemImageCache: ObservableObject {
         ) else { return }
 
         let expectedWidth = boundsUnion.width * scale
-        let expectedHeight = boundsUnion.height * scale
-        guard CGFloat(compositeImage.width) == expectedWidth,
-              CGFloat(compositeImage.height) == expectedHeight else { return }
+        guard CGFloat(compositeImage.width) == expectedWidth else { return }
+
+        guard !compositeImage.isTransparent() else { return }
 
         var newImages = [MenuBarItemTag: CapturedImage]()
         for windowID in windowIDs {
@@ -543,16 +543,21 @@ final class MenuBarItemImageCache: ObservableObject {
                 width: bounds.width * scale,
                 height: bounds.height * scale
             )
-            guard let image = compositeImage.cropping(to: cropRect) else {
+            guard let image = compositeImage.cropping(to: cropRect),
+                  !image.isTransparent() else {
                 continue
             }
             newImages[item.tag] = CapturedImage(cgImage: image, scale: scale)
         }
 
-        guard !newImages.isEmpty else { return }
+        guard !newImages.isEmpty, !Task.isCancelled else { return }
 
         await MainActor.run { [newImages] in
-            self.images.merge(newImages) { _, new in new }
+            for (tag, newImage) in newImages {
+                if !CapturedImage.isVisuallyEqual(self.images[tag], newImage) {
+                    self.images[tag] = newImage
+                }
+            }
         }
     }
 
