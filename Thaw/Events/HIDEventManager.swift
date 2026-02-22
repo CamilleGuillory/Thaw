@@ -900,6 +900,7 @@ extension HIDEventManager {
         // Then perform expensive Window Server checks.
         return !isMouseInsideApplicationMenu(appState: appState, screen: screen)
             && !isMouseInsideMenuBarItem(appState: appState, screen: screen)
+            && !isMouseInsideIceIcon(appState: appState)
     }
 
     /// A Boolean value that indicates whether the mouse pointer is within
