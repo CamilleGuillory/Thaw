@@ -374,14 +374,15 @@ private final class MenuBarSearchHostingView: NSHostingView<AnyView> {
         panel: MenuBarSearchPanel
     ) {
         super.init(
-            rootView: MenuBarSearchContentView(displayID: displayID, panel: panel) { [weak panel] in
-                panel?.close()
-            }
-            .environmentObject(appState)
-            .environmentObject(appState.itemManager)
-            .environmentObject(appState.imageCache)
-            .environmentObject(model)
-            .erasedToAnyView()
+            rootView: AnyView(
+                MenuBarSearchContentView(displayID: displayID, panel: panel) { [weak panel] in
+                    panel?.close()
+                }
+                .environmentObject(appState)
+                .environmentObject(appState.itemManager)
+                .environmentObject(appState.imageCache)
+                .environmentObject(model)
+            )
         )
     }
 
@@ -643,7 +644,7 @@ private struct ShowItemButton: View {
                     .aspectRatio(contentMode: .fit)
                     .frame(width: 11, height: 11)
                     .foregroundStyle(.secondary)
-                    .fontWeight(.bold)
+                    .bold()
                     .padding(.horizontal, 7)
                     .padding(.vertical, 5)
                     .background {
@@ -763,7 +764,7 @@ private struct MenuBarSearchItemView: View {
                     labelIcon
                     TextField(item.autoDetectedName, text: $model.editingName)
                         .textFieldStyle(.plain)
-                        .foregroundColor(.primary)
+                        .foregroundStyle(.primary)
                         .focused($isEditing)
                         .textContentType(.none)
                         .autocorrectionDisabled(true)

@@ -292,7 +292,6 @@ final class MenuBarManager: ObservableObject {
                         // Available space: if app menu extends into notch, add notch width; otherwise use visible frame
                         let spaceAvailableFromAppMenuEnd: CGFloat
                         if let notch = screen.frameOfNotch {
-                            // print("DEBUG: notch.minX: \(notch.minX), notch.maxX: \(notch.maxX)")
                             if appMenuRightStart > notch.minX {
                                 // App menu extends into notch, items get moved past notch
                                 spaceAvailableFromAppMenuEnd = (notch.minX - appMenuRightStart) + (screen.visibleFrame.maxX - notch.maxX)
@@ -305,13 +304,6 @@ final class MenuBarManager: ObservableObject {
                         }
 
                         let spaceNeededFromAppMenuEnd = newRightmostPos - appMenuRightStart
-
-                        /*
-                         print("DEBUG: controlBounds: minX=\(controlBounds.minX), width=\(controlBounds.width), hiddenItemsWidth: \(hiddenItemsWidth)")
-                         print("DEBUG: newRightmostPos: \(newRightmostPos)")
-                         print("DEBUG: appMenuRightStart: \(appMenuRightStart), screen visibleFrame maxX: \(screen.visibleFrame.maxX)")
-                         print("DEBUG: spaceNeeded: \(spaceNeededFromAppMenuEnd), spaceAvailable: \(spaceAvailableFromAppMenuEnd)")
-                          */
 
                         // If items would extend past screen edge, hide the app menu
                         if spaceNeededFromAppMenuEnd > spaceAvailableFromAppMenuEnd {
