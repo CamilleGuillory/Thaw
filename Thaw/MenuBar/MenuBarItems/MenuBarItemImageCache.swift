@@ -553,10 +553,8 @@ final class MenuBarItemImageCache: ObservableObject {
         guard !newImages.isEmpty, !Task.isCancelled else { return }
 
         await MainActor.run { [newImages] in
-            for (tag, newImage) in newImages {
-                if !CapturedImage.isVisuallyEqual(self.images[tag], newImage) {
-                    self.images[tag] = newImage
-                }
+            for (tag, newImage) in newImages where !CapturedImage.isVisuallyEqual(self.images[tag], newImage) {
+                self.images[tag] = newImage
             }
         }
     }
