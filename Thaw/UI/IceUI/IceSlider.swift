@@ -14,17 +14,26 @@ struct IceSlider<Value: BinaryFloatingPoint, ValueLabel: View>: View {
 
     private let bounds: ClosedRange<Value>
     private let step: Value?
+    private let reversed: Bool
+    private let showsValue: Bool
+    private let unit: String?
     private let valueLabel: ValueLabel
 
     init(
         value: Binding<Value>,
         in bounds: ClosedRange<Value>,
         step: Value? = nil,
+        reversed: Bool = false,
+        showsValue: Bool = false,
+        unit: String? = nil,
         @ViewBuilder valueLabel: () -> ValueLabel
     ) {
         self._value = value
         self.bounds = bounds
         self.step = step
+        self.reversed = reversed
+        self.showsValue = showsValue
+        self.unit = unit
         self.valueLabel = valueLabel()
     }
 
@@ -32,11 +41,17 @@ struct IceSlider<Value: BinaryFloatingPoint, ValueLabel: View>: View {
         _ valueLabelKey: LocalizedStringKey,
         value: Binding<Value>,
         in bounds: ClosedRange<Value>,
-        step: Value? = nil
+        step: Value? = nil,
+        reversed: Bool = false,
+        showsValue: Bool = false,
+        unit: String? = nil
     ) where ValueLabel == Text {
         self._value = value
         self.bounds = bounds
         self.step = step
+        self.reversed = reversed
+        self.showsValue = showsValue
+        self.unit = unit
         self.valueLabel = Text(valueLabelKey)
     }
 
@@ -61,14 +76,28 @@ struct IceSlider<Value: BinaryFloatingPoint, ValueLabel: View>: View {
             minHeight: 0,
             gestureOptions: .default.subtracting([.scrollWheel])
         ) {
-            valueLabel
-                .frame(height: height)
+            HStack(spacing: 4) {
+                valueLabel
+                if showsValue {
+                    Spacer()
+                    Text(value.formatted())
+                        .monospacedDigit()
+                    if let unit {
+                        Text(unit)
+                    }
+                }
+            }
+            .padding(.horizontal, 8)
+            .opacity(0.5)
+            .frame(height: height)
+            .rotationEffect(.degrees(reversed ? 180 : 0))
         }
         .compactSliderDisabledHapticFeedback(true)
         .compactSliderSecondaryColor(
             progressColor: .accentColor.opacity(0.5),
             focusedProgressColor: .accentColor.opacity(0.75)
         )
+        .rotationEffect(.degrees(reversed ? 180 : 0))
         .clipShape(borderShape)
         .contentShape([.interaction, .focusEffect], borderShape)
     }

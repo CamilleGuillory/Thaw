@@ -13,15 +13,40 @@ struct MenuBarShapePicker: View {
     @Binding var configuration: MenuBarAppearanceConfigurationV2
 
     var body: some View {
-        VStack {
+        VStack(spacing: 12) {
             shapeKindPicker
             shapePicker
                 .foregroundStyle(colorScheme == .dark ? .primary : .secondary)
+            if configuration.shapeKind != .noShape {
+                horizontalMargins
+            }
         }
         if configuration.shapeKind == .noShape {
             Text("No shape kind selected")
                 .foregroundStyle(.secondary)
                 .frame(maxWidth: .infinity, alignment: .center)
+        }
+    }
+
+    private var horizontalMargins: some View {
+        HStack(spacing: 17) {
+            IceSlider(
+                "Left margin",
+                value: $configuration.leftMargin,
+                in: 0 ... 15,
+                step: 1,
+                showsValue: true,
+                unit: "px"
+            )
+            IceSlider(
+                "Right margin",
+                value: $configuration.rightMargin,
+                in: 0 ... 15,
+                step: 1,
+                reversed: true,
+                showsValue: true,
+                unit: "px"
+            )
         }
     }
 
@@ -39,15 +64,25 @@ struct MenuBarShapePicker: View {
         case .noShape:
             EmptyView()
         case .full:
-            MenuBarFullShapePicker(info: $configuration.fullShapeInfo).equatable()
+            MenuBarFullShapePicker(
+                info: $configuration.fullShapeInfo,
+                leftMargin: $configuration.leftMargin,
+                rightMargin: $configuration.rightMargin
+            ).equatable()
         case .split:
-            MenuBarSplitShapePicker(info: $configuration.splitShapeInfo).equatable()
+            MenuBarSplitShapePicker(
+                info: $configuration.splitShapeInfo,
+                leftMargin: $configuration.leftMargin,
+                rightMargin: $configuration.rightMargin
+            ).equatable()
         }
     }
 }
 
 private struct MenuBarFullShapePicker: View, Equatable {
     @Binding var info: MenuBarFullShapeInfo
+    @Binding var leftMargin: Double
+    @Binding var rightMargin: Double
 
     var body: some View {
         VStack {
@@ -68,9 +103,15 @@ private struct MenuBarFullShapePicker: View, Equatable {
 
     private var exampleStack: some View {
         HStack(spacing: 0) {
+            if leftMargin > 0 {
+                Color.clear.frame(width: leftMargin)
+            }
             leadingEndCapExample
             Rectangle()
             trailingEndCapExample
+            if rightMargin > 0 {
+                Color.clear.frame(width: rightMargin)
+            }
         }
         .frame(height: 24)
     }
@@ -133,7 +174,9 @@ private struct MenuBarFullShapePicker: View, Equatable {
     }
 
     static func == (lhs: Self, rhs: Self) -> Bool {
-        lhs.info == rhs.info
+        lhs.info == rhs.info &&
+            lhs.leftMargin == rhs.leftMargin &&
+            lhs.rightMargin == rhs.rightMargin
     }
 
     private func cgRectEdge(for edge: HorizontalEdge) -> CGRectEdge {
@@ -146,17 +189,29 @@ private struct MenuBarFullShapePicker: View, Equatable {
 
 private struct MenuBarSplitShapePicker: View, Equatable {
     @Binding var info: MenuBarSplitShapeInfo
+    @Binding var leftMargin: Double
+    @Binding var rightMargin: Double
 
     var body: some View {
         HStack {
-            MenuBarFullShapePicker(info: $info.leading).equatable()
+            MenuBarFullShapePicker(
+                info: $info.leading,
+                leftMargin: $leftMargin,
+                rightMargin: .constant(0)
+            ).equatable()
             Divider()
-            MenuBarFullShapePicker(info: $info.trailing).equatable()
+            MenuBarFullShapePicker(
+                info: $info.trailing,
+                leftMargin: .constant(0),
+                rightMargin: $rightMargin
+            ).equatable()
         }
     }
 
     static func == (lhs: Self, rhs: Self) -> Bool {
-        lhs.info == rhs.info
+        lhs.info == rhs.info &&
+            lhs.leftMargin == rhs.leftMargin &&
+            lhs.rightMargin == rhs.rightMargin
     }
 }
 

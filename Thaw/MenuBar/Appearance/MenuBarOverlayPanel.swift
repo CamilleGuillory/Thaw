@@ -664,6 +664,9 @@ private final class MenuBarOverlayPanelContentView: NSView {
             return NSBezierPath()
         }
         var rect = rect
+        rect.origin.x += fullConfiguration.leftMargin
+        rect.size.width -= (fullConfiguration.leftMargin + fullConfiguration.rightMargin)
+
         let shouldInset = isInset && screen.hasNotch
         if shouldInset {
             rect = rect.insetBy(dx: 0, dy: appearanceManager.menuBarInsetAmount)
@@ -706,6 +709,7 @@ private final class MenuBarOverlayPanelContentView: NSView {
                 rect.size.width -= appearanceManager.menuBarInsetAmount
             }
         }
+
         let leadingPathBounds: CGRect = {
             guard
                 var maxX = overlayPanel?.applicationMenuFrame?.width,
@@ -722,9 +726,9 @@ private final class MenuBarOverlayPanelContentView: NSView {
                 maxX += 20
             }
             return CGRect(
-                x: rect.minX,
+                x: rect.minX + fullConfiguration.leftMargin,
                 y: rect.minY,
-                width: maxX,
+                width: max(0, maxX - fullConfiguration.leftMargin),
                 height: rect.height
             )
         }()
@@ -757,7 +761,7 @@ private final class MenuBarOverlayPanelContentView: NSView {
             return CGRect(
                 x: position,
                 y: rect.minY,
-                width: rect.maxX - position,
+                width: max(0, (rect.maxX - fullConfiguration.rightMargin) - position),
                 height: rect.height
             )
         }()
@@ -765,8 +769,11 @@ private final class MenuBarOverlayPanelContentView: NSView {
         if leadingPathBounds == .zero || trailingPathBounds == .zero
             || leadingPathBounds.intersects(trailingPathBounds)
         {
+            var fallbackRect = rect
+            fallbackRect.origin.x += fullConfiguration.leftMargin
+            fallbackRect.size.width -= (fullConfiguration.leftMargin + fullConfiguration.rightMargin)
             return shapePath(
-                in: rect,
+                in: fallbackRect,
                 leadingEndCap: info.leading.leadingEndCap,
                 trailingEndCap: info.trailing.trailingEndCap,
                 screen: screen

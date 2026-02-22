@@ -16,6 +16,8 @@ struct MenuBarAppearanceConfigurationV2: Hashable {
     var fullShapeInfo: MenuBarFullShapeInfo
     var splitShapeInfo: MenuBarSplitShapeInfo
     var isInset: Bool
+    var leftMargin: Double
+    var rightMargin: Double
     var isDynamic: Bool
     var showsMenuBarBackground: Bool
 
@@ -50,6 +52,8 @@ extension MenuBarAppearanceConfigurationV2 {
         fullShapeInfo: .default,
         splitShapeInfo: .default,
         isInset: true,
+        leftMargin: 0,
+        rightMargin: 0,
         isDynamic: false,
         showsMenuBarBackground: false
     )
@@ -64,6 +68,8 @@ extension MenuBarAppearanceConfigurationV2: Codable {
         case fullShapeInfo
         case splitShapeInfo
         case isInset
+        case leftMargin
+        case rightMargin
         case isDynamic
         case showsMenuBarBackground
     }
@@ -78,6 +84,8 @@ extension MenuBarAppearanceConfigurationV2: Codable {
             fullShapeInfo: container.decodeIfPresent(MenuBarFullShapeInfo.self, forKey: .fullShapeInfo) ?? Self.defaultConfiguration.fullShapeInfo,
             splitShapeInfo: container.decodeIfPresent(MenuBarSplitShapeInfo.self, forKey: .splitShapeInfo) ?? Self.defaultConfiguration.splitShapeInfo,
             isInset: container.decodeIfPresent(Bool.self, forKey: .isInset) ?? Self.defaultConfiguration.isInset,
+            leftMargin: container.decodeIfPresent(Double.self, forKey: .leftMargin) ?? Self.defaultConfiguration.leftMargin,
+            rightMargin: container.decodeIfPresent(Double.self, forKey: .rightMargin) ?? Self.defaultConfiguration.rightMargin,
             isDynamic: container.decodeIfPresent(Bool.self, forKey: .isDynamic) ?? Self.defaultConfiguration.isDynamic,
             showsMenuBarBackground: container.decodeIfPresent(Bool.self, forKey: .showsMenuBarBackground) ?? Self.defaultConfiguration.showsMenuBarBackground
         )
@@ -92,6 +100,8 @@ extension MenuBarAppearanceConfigurationV2: Codable {
         try container.encode(fullShapeInfo, forKey: .fullShapeInfo)
         try container.encode(splitShapeInfo, forKey: .splitShapeInfo)
         try container.encode(isInset, forKey: .isInset)
+        try container.encode(leftMargin, forKey: .leftMargin)
+        try container.encode(rightMargin, forKey: .rightMargin)
         try container.encode(isDynamic, forKey: .isDynamic)
         try container.encode(showsMenuBarBackground, forKey: .showsMenuBarBackground)
     }
