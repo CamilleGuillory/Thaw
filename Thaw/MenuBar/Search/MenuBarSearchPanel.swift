@@ -77,7 +77,7 @@ final class MenuBarSearchPanel: NSPanel {
     }
 
     @MainActor
-    private func startEditingSelectedItem() {
+    func startEditingSelectedItem() {
         guard let selection = model.selection, case let .item(tag, windowID) = selection,
               let item = menuBarItem(for: selection)
         else {
@@ -321,12 +321,14 @@ final class MenuBarSearchPanel: NSPanel {
     }
 
     override func cancelOperation(_: Any?) {
-        if model.editingItemTag != nil {
-            model.editingItemTag = nil
-            model.editingName = ""
-        } else {
-            close()
-        }
+        cancelEditing()
+    }
+
+    @MainActor
+    func cancelEditing() {
+        model.editingItemTag = nil
+        model.editingItemWindowID = nil
+        model.editingName = ""
     }
 
     /// Saves the frame for a specific display.
@@ -512,8 +514,20 @@ private struct MenuBarSearchContentView: View {
             Spacer()
 
             if let selection = model.selection, let item = panel.menuBarItem(for: selection) {
-                ShowItemButton(item: item) {
-                    performAction(for: item)
+                if model.editingItemTag == nil {
+                    EditNameButton {
+                        panel.startEditingSelectedItem()
+                    }
+                    ShowItemButton(item: item) {
+                        performAction(for: item)
+                    }
+                } else {
+                    EditDiscardButton {
+                        panel.cancelEditing()
+                    }
+                    EditConfirmButton {
+                        panel.saveEditingName()
+                    }
                 }
             }
         }
@@ -613,6 +627,110 @@ private struct MenuBarSearchContentView: View {
                     clickingWith: .left,
                     on: displayID
                 )
+            }
+        }
+    }
+}
+
+private struct EditNameButton: View {
+    let action: () -> Void
+
+    private var backgroundShape: some InsettableShape {
+        if #available(macOS 26.0, *) {
+            RoundedRectangle(cornerRadius: 5, style: .continuous)
+        } else {
+            RoundedRectangle(cornerRadius: 3, style: .circular)
+        }
+    }
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 5) {
+                Text(String(localized: "Edit Name"))
+
+                HStack(spacing: 0) {
+                    Text("⌘")
+                    Text("+")
+                    Text("E")
+                }
+                .padding(.horizontal, 4)
+                .padding(.vertical, 2)
+                .background {
+                    backgroundShape
+                        .fill(.regularMaterial)
+                        .brightness(0.25)
+                        .opacity(0.5)
+                }
+                .foregroundStyle(.secondary)
+            }
+        }
+    }
+}
+
+private struct EditConfirmButton: View {
+    let action: () -> Void
+
+    private var backgroundShape: some InsettableShape {
+        if #available(macOS 26.0, *) {
+            RoundedRectangle(cornerRadius: 5, style: .continuous)
+        } else {
+            RoundedRectangle(cornerRadius: 3, style: .circular)
+        }
+    }
+
+    var body: some View {
+        Button(action: action) {
+            HStack {
+                Text(
+                    String(localized: "Confirm")
+                )
+                .padding(.leading, 5)
+
+                Image(systemName: "return")
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+                    .frame(width: 11, height: 11)
+                    .foregroundStyle(.secondary)
+                    .bold()
+                    .padding(.horizontal, 7)
+                    .padding(.vertical, 5)
+                    .background {
+                        backgroundShape
+                            .fill(.regularMaterial)
+                            .brightness(0.25)
+                            .opacity(0.5)
+                    }
+            }
+        }
+    }
+}
+
+private struct EditDiscardButton: View {
+    let action: () -> Void
+
+    private var backgroundShape: some InsettableShape {
+        if #available(macOS 26.0, *) {
+            RoundedRectangle(cornerRadius: 5, style: .continuous)
+        } else {
+            RoundedRectangle(cornerRadius: 3, style: .circular)
+        }
+    }
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 5) {
+                Text(String(localized: "Discard"))
+
+                Text("⎋")
+                    .font(.system(size: 12))
+                    .padding(.horizontal, 4)
+                    .padding(.vertical, 2)
+                    .background {
+                        backgroundShape
+                            .fill(.regularMaterial)
+                            .brightness(0.25)
+                            .opacity(0.5)
+                    }
             }
         }
     }
