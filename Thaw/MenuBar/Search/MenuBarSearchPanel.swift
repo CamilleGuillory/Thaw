@@ -304,6 +304,7 @@ final class MenuBarSearchPanel: NSPanel {
     }
 
     /// Dismisses the search panel.
+    @MainActor
     override func close() {
         // Only save if window is actually visible and has content
         if isVisible, let screen = screen, contentView != nil {
@@ -466,17 +467,25 @@ private struct MenuBarSearchContentView: View {
         let promptText = Text("Search menu bar items…")
 
         VStack(spacing: 0) {
-            TextField(text: $model.searchText, prompt: promptText) {
-                promptText
+            HStack(spacing: 10) {
+                Image(systemName: "magnifyingglass")
+                    .font(.system(size: 18))
+                    .foregroundStyle(.secondary)
+
+                TextField(text: $model.searchText, prompt: promptText) {
+                    promptText
+                }
+                .labelsHidden()
+                .textFieldStyle(.plain)
+                .multilineTextAlignment(.leading)
+                .font(.system(size: 18))
+                .textContentType(.none)
+                .autocorrectionDisabled(true)
+
+                Spacer()
             }
-            .labelsHidden()
-            .textFieldStyle(.plain)
-            .multilineTextAlignment(.leading)
-            .font(.system(size: 18))
             .padding(15)
             .focused($searchFieldIsFocused)
-            .textContentType(.none)
-            .autocorrectionDisabled(true)
 
             Divider()
         }
