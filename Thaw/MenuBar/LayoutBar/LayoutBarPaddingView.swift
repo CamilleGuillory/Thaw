@@ -190,6 +190,9 @@ final class LayoutBarPaddingView: NSView {
                 alert.runModal()
             }
             watchdogTask.cancel()
+            if let appState = container.appState {
+                await appState.itemManager.cacheItemsRegardless(skipRecentMoveCheck: true)
+            }
             await MainActor.run {
                 self.isStabilizing = false
                 self.showOverlay(false)
