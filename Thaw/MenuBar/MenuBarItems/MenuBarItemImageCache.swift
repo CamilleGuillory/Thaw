@@ -90,9 +90,6 @@ final class MenuBarItemImageCache: ObservableObject {
     private static let maxFailuresBeforeBlacklist = 3
     private static let blacklistCooldownSeconds: TimeInterval = 30 // 30 seconds
 
-    /// Interval between live refresh ticks (~5fps).
-    private static let liveRefreshInterval: Duration = .milliseconds(200)
-
     /// Queue to run cache operations.
     private let queue = DispatchQueue(
         label: "MenuBarItemImageCache",
@@ -317,6 +314,18 @@ final class MenuBarItemImageCache: ObservableObject {
                 self?.startLiveRefreshIfNeeded()
             }
             .store(in: &c)
+
+            // Restart the live refresh loop when the icon refresh interval changes
+            appState.settings.advanced.$iconRefreshInterval
+                .removeDuplicates()
+                .receive(on: DispatchQueue.main)
+                .sink { [weak self] _ in
+                    guard let self, self.liveRefreshTask != nil else { return }
+                    self.liveRefreshTask?.cancel()
+                    self.liveRefreshTask = nil
+                    self.startLiveRefreshIfNeeded()
+                }
+                .store(in: &c)
         }
 
         cancellables = c
@@ -369,7 +378,9 @@ final class MenuBarItemImageCache: ObservableObject {
         MenuBarItemImageCache.diagLog.debug("Live refresh loop started")
 
         while !Task.isCancelled {
-            try? await Task.sleep(for: Self.liveRefreshInterval)
+            let interval = appState.settings.advanced.iconRefreshInterval
+            let ms = Int(interval * 1000)
+            try? await Task.sleep(for: .milliseconds(ms))
             guard !Task.isCancelled else { break }
 
             let nav = appState.navigationState
