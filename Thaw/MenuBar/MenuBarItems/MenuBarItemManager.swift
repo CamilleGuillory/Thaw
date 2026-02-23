@@ -137,6 +137,8 @@ final class MenuBarItemManager: ObservableObject {
     private var backgroundCacheContinuation: CheckedContinuation<Void, Never>?
     /// Suppresses image cache updates during layout reset to prevent stale cache during moves.
     var isResettingLayout = false
+    /// Suppresses saving section order during an active order-restore pass.
+    private var isRestoringItemOrder = false
     /// Persisted bundle identifiers explicitly placed in hidden section.
     private var pinnedHiddenBundleIDs = Set<String>()
     /// Persisted bundle identifiers explicitly placed in always-hidden section.
@@ -151,6 +153,10 @@ final class MenuBarItemManager: ObservableObject {
     /// temporarily shown items. Stores the neighbor tag and position to restore
     /// the original ordering when the app relaunches.
     private var pendingReturnDestinations = [String: [String: String]]() // [tagIdentifier: ["neighbor": tag, "position": "left"|"right"]]
+
+    /// Persisted per-section item order. Maps section key to an ordered list of
+    /// `uniqueIdentifier` strings (right-to-left, matching cache array order).
+    private var savedSectionOrder = [String: [String]]()
 
     /// Loads persisted known item identifiers.
     private func loadKnownItemIdentifiers() {
@@ -207,6 +213,37 @@ final class MenuBarItemManager: ObservableObject {
         UserDefaults.standard.set(pendingReturnDestinations, forKey: destKey)
     }
 
+    /// Loads persisted section order.
+    private func loadSavedSectionOrder() {
+        let key = "MenuBarItemManager.savedSectionOrder"
+        if let stored = UserDefaults.standard.dictionary(forKey: key) as? [String: [String]] {
+            savedSectionOrder = stored
+        }
+    }
+
+    /// Persists the current saved section order.
+    private func persistSavedSectionOrder() {
+        let key = "MenuBarItemManager.savedSectionOrder"
+        UserDefaults.standard.set(savedSectionOrder, forKey: key)
+    }
+
+    /// Extracts the current per-section item order from the given cache and
+    /// persists it. Skips the write when the order has not changed.
+    private func saveSectionOrder(from cache: ItemCache) {
+        var newOrder = [String: [String]]()
+        for section in MenuBarSection.Name.allCases {
+            let identifiers = cache[section]
+                .filter { !$0.isControlItem }
+                .map(\.uniqueIdentifier)
+            guard !identifiers.isEmpty else { continue }
+            newOrder[sectionKey(for: section)] = identifiers
+        }
+        guard newOrder != savedSectionOrder else { return }
+        savedSectionOrder = newOrder
+        persistSavedSectionOrder()
+        MenuBarItemManager.diagLog.debug("Saved section order: \(newOrder.mapValues(\.count))")
+    }
+
     /// Returns a persistable string key for the given section name.
     private func sectionKey(for section: MenuBarSection.Name) -> String {
         switch section {
@@ -235,7 +272,8 @@ final class MenuBarItemManager: ObservableObject {
         loadKnownItemIdentifiers()
         loadPinnedBundleIDs()
         loadPendingRelocations()
-        MenuBarItemManager.diagLog.debug("performSetup: loaded \(knownItemIdentifiers.count) known identifiers, \(pinnedHiddenBundleIDs.count) pinned hidden, \(pinnedAlwaysHiddenBundleIDs.count) pinned always-hidden")
+        loadSavedSectionOrder()
+        MenuBarItemManager.diagLog.debug("performSetup: loaded \(knownItemIdentifiers.count) known identifiers, \(pinnedHiddenBundleIDs.count) pinned hidden, \(pinnedAlwaysHiddenBundleIDs.count) pinned always-hidden, \(savedSectionOrder.values.map(\.count)) saved order entries")
         // On first launch (no known identifiers), avoid auto-relocating the leftmost item
         // so everything remains in the hidden section until the user interacts.
         suppressNextNewLeftmostItemRelocation = knownItemIdentifiers.isEmpty
@@ -642,6 +680,9 @@ extension MenuBarItemManager {
         }
 
         itemCache = context.cache
+        if !isRestoringItemOrder && !isResettingLayout {
+            saveSectionOrder(from: context.cache)
+        }
         MenuBarItemManager.diagLog.debug("Updated menu bar item cache: visible=\(context.cache[.visible].count), hidden=\(context.cache[.hidden].count), alwaysHidden=\(context.cache[.alwaysHidden].count)")
     }
 
@@ -759,6 +800,24 @@ extension MenuBarItemManager {
                 Task { [weak self] in
                     try? await Task.sleep(for: .milliseconds(300))
                     await self?.cacheItemsRegardless(skipRecentMoveCheck: true)
+                    continuation?.resume()
+                }
+                return
+            }
+
+            let didRestoreOrder = await restoreSavedItemOrder(items, controlItems: controlItems)
+
+            if didRestoreOrder {
+                // Keep isRestoringItemOrder true through the recache to prevent
+                // saving intermediate item positions while macOS settles the moves.
+                isRestoringItemOrder = true
+                MenuBarItemManager.diagLog.debug("Restored saved item order; scheduling recache")
+                let continuation = self.backgroundCacheContinuation
+                self.backgroundCacheContinuation = nil
+                Task { [weak self] in
+                    try? await Task.sleep(for: .milliseconds(300))
+                    await self?.cacheItemsRegardless(skipRecentMoveCheck: true)
+                    self?.isRestoringItemOrder = false
                     continuation?.resume()
                 }
                 return
@@ -2610,6 +2669,124 @@ extension MenuBarItemManager {
         return didRelocate
     }
 
+    /// Restores the persisted per-section item order if the current positions
+    /// diverge from the saved order (e.g. after an app like Stats.app restarts
+    /// and its items appear in a different order).
+    ///
+    /// Returns `true` if any items were moved.
+    private func restoreSavedItemOrder(
+        _ items: [MenuBarItem],
+        controlItems: ControlItemPair
+    ) async -> Bool {
+        guard !savedSectionOrder.isEmpty else { return false }
+
+        // Don't restore while suppressing relocations (first launch / reset).
+        guard !suppressNextNewLeftmostItemRelocation else { return false }
+
+        // Don't interfere with items that are currently temporarily shown.
+        let activelyShownTags = Set(temporarilyShownItemContexts.map {
+            "\($0.tag.namespace):\($0.tag.title)"
+        })
+
+        // Build a lookup from uniqueIdentifier → MenuBarItem for all current non-control items.
+        var itemsByID = [String: MenuBarItem]()
+        for item in items where !item.isControlItem {
+            itemsByID[item.uniqueIdentifier] = item
+        }
+
+        // Classify current items into sections using position-based detection.
+        var context = CacheContext(
+            controlItems: controlItems,
+            displayID: Bridging.getActiveMenuBarDisplayID()
+        )
+        var currentSectionItems = [String: [MenuBarItem]]()
+        for item in items where !item.isControlItem && context.isValidForCaching(item) {
+            if let section = context.findSection(for: item) {
+                let key = sectionKey(for: section)
+                currentSectionItems[key, default: []].append(item)
+            }
+        }
+
+        var didMove = false
+
+        for sectionName in MenuBarSection.Name.allCases {
+            let sectionKeyString = sectionKey(for: sectionName)
+            guard let savedIdentifiers = savedSectionOrder[sectionKeyString],
+                  let currentItems = currentSectionItems[sectionKeyString],
+                  !currentItems.isEmpty
+            else {
+                continue
+            }
+
+            // Filter saved identifiers to only those present in this section right now.
+            let currentIDSet = Set(currentItems.map(\.uniqueIdentifier))
+            let filteredSaved = savedIdentifiers.filter { currentIDSet.contains($0) }
+
+            guard !filteredSaved.isEmpty else { continue }
+
+            // Build the current order (identifiers only, preserving cache array order = right-to-left).
+            let currentOrder = currentItems.map(\.uniqueIdentifier)
+
+            // Skip section if the relative order of the overlapping items already matches.
+            let filteredSavedSet = Set(filteredSaved)
+            let currentFiltered = currentOrder.filter { filteredSavedSet.contains($0) }
+            guard currentFiltered != filteredSaved else { continue }
+
+            MenuBarItemManager.diagLog.info(
+                """
+                Restoring saved item order for \(sectionKeyString) section \
+                (\(filteredSaved.count) items)
+                """
+            )
+
+            // Find the first valid anchor that is not temporarily shown.
+            var anchorIndex = 0
+            var anchor: MenuBarItem?
+            while anchorIndex < filteredSaved.count {
+                guard let candidate = itemsByID[filteredSaved[anchorIndex]] else {
+                    anchorIndex += 1
+                    continue
+                }
+                let tagString = "\(candidate.tag.namespace):\(candidate.tag.title)"
+                if activelyShownTags.contains(tagString) {
+                    anchorIndex += 1
+                    continue
+                }
+                anchor = candidate
+                break
+            }
+            guard let anchor else { continue }
+
+            // Move items right-to-left: the anchor is the rightmost valid item;
+            // each subsequent item is placed to its left.
+            var currentAnchor = anchor
+            for i in (anchorIndex + 1)..<filteredSaved.count {
+                guard let item = itemsByID[filteredSaved[i]] else { continue }
+
+                // Skip items that are currently temporarily shown.
+                let tagString = "\(item.tag.namespace):\(item.tag.title)"
+                guard !activelyShownTags.contains(tagString) else { continue }
+
+                do {
+                    try await move(item: item, to: .leftOfItem(currentAnchor), skipInputPause: true)
+                    didMove = true
+                    // Only advance the anchor after a successful move so that
+                    // the next item targets the last correctly placed position.
+                    currentAnchor = item
+                } catch {
+                    MenuBarItemManager.diagLog.error(
+                        """
+                        Failed to restore position for \(item.logString) in \
+                        \(sectionKeyString): \(error)
+                        """
+                    )
+                }
+            }
+        }
+
+        return didMove
+    }
+
     /// Returns the best-known bounds for a menu bar item.
     private func bestBounds(for item: MenuBarItem) -> CGRect {
         Bridging.getWindowBounds(for: item.windowID) ?? item.bounds
@@ -2796,9 +2973,11 @@ extension MenuBarItemManager {
         pinnedAlwaysHiddenBundleIDs.removeAll()
         pendingRelocations.removeAll()
         pendingReturnDestinations.removeAll()
+        savedSectionOrder.removeAll()
         persistKnownItemIdentifiers()
         persistPinnedBundleIDs()
         persistPendingRelocations()
+        persistSavedSectionOrder()
         temporarilyShownItemContexts.removeAll()
 
         // Prevent the first post-reset cache pass from treating the freshly reset items as "new".
