@@ -680,7 +680,7 @@ extension MenuBarItemManager {
         }
 
         itemCache = context.cache
-        if !isRestoringItemOrder && !isResettingLayout {
+        if !isRestoringItemOrder, !isResettingLayout {
             saveSectionOrder(from: context.cache)
         }
         MenuBarItemManager.diagLog.debug("Updated menu bar item cache: visible=\(context.cache[.visible].count), hidden=\(context.cache[.hidden].count), alwaysHidden=\(context.cache[.alwaysHidden].count)")
@@ -2767,7 +2767,7 @@ extension MenuBarItemManager {
             // Move items right-to-left: the anchor is the rightmost valid item;
             // each subsequent item is placed to its left.
             var currentAnchor = anchor
-            for i in (anchorIndex + 1)..<filteredSaved.count {
+            for i in (anchorIndex + 1) ..< filteredSaved.count {
                 guard let item = itemsByID[filteredSaved[i]] else { continue }
 
                 // Skip items that are currently temporarily shown.
