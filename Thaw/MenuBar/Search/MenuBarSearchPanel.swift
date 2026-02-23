@@ -447,24 +447,6 @@ private struct MenuBarSearchContentView: View {
         .task {
             searchFieldIsFocused = true
         }
-        .task {
-            // Refresh captured images at ~5fps so animated menu bar
-            // icons (e.g. Google Drive sync spinner) stay up-to-date
-            // while keeping CPU/GPU usage low.
-            guard let screen = NSScreen.screens.first(where: { $0.displayID == displayID }) else { return }
-            while !Task.isCancelled {
-                try? await Task.sleep(for: .milliseconds(200))
-                guard !Task.isCancelled else { break }
-                for section in MenuBarSection.Name.allCases {
-                    let sectionItems = itemManager.itemCache.managedItems(for: section)
-                    guard !sectionItems.isEmpty else { continue }
-                    await imageCache.refreshImages(
-                        of: sectionItems,
-                        scale: screen.backingScaleFactor
-                    )
-                }
-            }
-        }
         .onChange(of: model.searchText, initial: true) {
             updateDisplayedItems()
             selectFirstDisplayedItem()

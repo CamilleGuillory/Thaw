@@ -112,9 +112,13 @@ final class MenuBarItemImageCache: ObservableObject {
     /// The currently running cache update task, if any.
     private var currentUpdateTask: Task<Void, Never>?
 
+    /// The currently running live-refresh task, if any.
+    private var liveRefreshTask: Task<Void, Never>?
+
     deinit {
         memoryPressureSource?.cancel()
         currentUpdateTask?.cancel()
+        liveRefreshTask?.cancel()
     }
 
     // MARK: Setup
@@ -296,9 +300,99 @@ final class MenuBarItemImageCache: ObservableObject {
                 }
             }
             .store(in: &c)
+
+            // Observe navigation state changes to start/stop live refresh
+            Publishers.CombineLatest4(
+                appState.navigationState.$isIceBarPresented,
+                appState.navigationState.$isSearchPresented,
+                appState.navigationState.$isSettingsPresented,
+                appState.navigationState.$settingsNavigationIdentifier
+            )
+            .combineLatest(appState.navigationState.$isAppFrontmost)
+            .debounce(for: .milliseconds(50), scheduler: DispatchQueue.main)
+            .sink { [weak self] _ in
+                self?.startLiveRefreshIfNeeded()
+            }
+            .store(in: &c)
         }
 
         cancellables = c
+    }
+
+    // MARK: Live Refresh
+
+    /// Starts or stops the live image refresh loop based on navigation state.
+    @MainActor
+    private func startLiveRefreshIfNeeded() {
+        guard let appState else {
+            liveRefreshTask?.cancel()
+            liveRefreshTask = nil
+            return
+        }
+
+        let nav = appState.navigationState
+        let needsRefresh = nav.isIceBarPresented
+            || nav.isSearchPresented
+            || (nav.isAppFrontmost && nav.isSettingsPresented
+                && nav.settingsNavigationIdentifier == .menuBarLayout)
+
+        if needsRefresh {
+            // Already running — don't restart
+            guard liveRefreshTask == nil else { return }
+            liveRefreshTask = Task { [weak self, weak appState] in
+                guard let self, let appState else { return }
+                await self.runLiveRefreshLoop(appState: appState)
+            }
+        } else {
+            liveRefreshTask?.cancel()
+            liveRefreshTask = nil
+        }
+    }
+
+    /// The centralized 5fps refresh loop for live image updates.
+    ///
+    /// Runs a single capture loop that serves all consumer views (IceBar,
+    /// Search, Layout Settings) instead of each view running its own loop.
+    @MainActor
+    private func runLiveRefreshLoop(appState: AppState) async {
+        while !Task.isCancelled {
+            try? await Task.sleep(for: .milliseconds(200))
+            guard !Task.isCancelled else { break }
+
+            let nav = appState.navigationState
+
+            // Determine display
+            let displayID = appState.itemManager.itemCache.displayID
+                ?? Bridging.getActiveMenuBarDisplayID()
+                ?? CGMainDisplayID()
+            guard let screen = NSScreen.screens.first(where: { $0.displayID == displayID }) else {
+                continue
+            }
+
+            // Determine which sections to refresh based on what's visible
+            let sections: [MenuBarSection.Name]
+            if nav.isSearchPresented
+                || (nav.isSettingsPresented && nav.settingsNavigationIdentifier == .menuBarLayout)
+            {
+                sections = MenuBarSection.Name.allCases
+            } else if nav.isIceBarPresented,
+                      let current = appState.menuBarManager.iceBarPanel.currentSection
+            {
+                sections = [current]
+            } else {
+                // No consumer visible on this tick — keep looping so the
+                // Combine observer can properly cancel the task. Using
+                // `break` here would race with IceBar close() where
+                // currentSection is nilled before isIceBarPresented.
+                continue
+            }
+
+            for section in sections {
+                let items = appState.itemManager.itemCache.managedItems(for: section)
+                guard !items.isEmpty else { continue }
+                await refreshImages(of: items, scale: screen.backingScaleFactor)
+            }
+        }
     }
 
     // MARK: Capturing Images

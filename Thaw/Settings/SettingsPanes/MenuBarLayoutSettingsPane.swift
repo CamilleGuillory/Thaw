@@ -112,25 +112,6 @@ struct MenuBarLayoutSettingsPane: View {
                 diagLog.error("Menu bar layout failed to load items after 3s timeout. cacheItems: \(itemManager.itemCache.managedItems.count), images: \(appState.imageCache.images.count), displayID: \(self.itemManager.itemCache.displayID.map { "\($0)" } ?? "nil")")
             }
         }
-        .task {
-            // Refresh captured images at ~5fps so animated menu bar
-            // icons (e.g. Google Drive sync spinner) stay up-to-date
-            // while keeping CPU/GPU usage low.
-            let displayID = itemManager.itemCache.displayID ?? Bridging.getActiveMenuBarDisplayID() ?? CGMainDisplayID()
-            guard let screen = NSScreen.screens.first(where: { $0.displayID == displayID }) else { return }
-            while !Task.isCancelled {
-                try? await Task.sleep(for: .milliseconds(200))
-                guard !Task.isCancelled else { break }
-                for section in MenuBarSection.Name.allCases {
-                    let sectionItems = itemManager.itemCache.managedItems(for: section)
-                    guard !sectionItems.isEmpty else { continue }
-                    await appState.imageCache.refreshImages(
-                        of: sectionItems,
-                        scale: screen.backingScaleFactor
-                    )
-                }
-            }
-        }
     }
 
     private var resetControls: some View {
