@@ -90,6 +90,9 @@ final class MenuBarItemImageCache: ObservableObject {
     private static let maxFailuresBeforeBlacklist = 3
     private static let blacklistCooldownSeconds: TimeInterval = 30 // 30 seconds
 
+    /// Interval between live refresh ticks (~5fps).
+    private static let liveRefreshInterval: Duration = .milliseconds(200)
+
     /// Queue to run cache operations.
     private let queue = DispatchQueue(
         label: "MenuBarItemImageCache",
@@ -339,24 +342,34 @@ final class MenuBarItemImageCache: ObservableObject {
         if needsRefresh {
             // Already running — don't restart
             guard liveRefreshTask == nil else { return }
+            MenuBarItemImageCache.diagLog.debug(
+                "Starting live refresh (iceBar=\(nav.isIceBarPresented), search=\(nav.isSearchPresented), settings=\(nav.isSettingsPresented))"
+            )
             liveRefreshTask = Task { [weak self, weak appState] in
                 guard let self, let appState else { return }
                 await self.runLiveRefreshLoop(appState: appState)
             }
         } else {
+            if liveRefreshTask != nil {
+                MenuBarItemImageCache.diagLog.debug("Stopping live refresh")
+            }
             liveRefreshTask?.cancel()
             liveRefreshTask = nil
         }
     }
 
-    /// The centralized 5fps refresh loop for live image updates.
+    /// The centralized live refresh loop for image updates.
     ///
     /// Runs a single capture loop that serves all consumer views (IceBar,
     /// Search, Layout Settings) instead of each view running its own loop.
+    /// Heavy work (`refreshImages`) is `nonisolated` and runs off the main
+    /// actor — only navigation state reads happen on `@MainActor`.
     @MainActor
     private func runLiveRefreshLoop(appState: AppState) async {
+        MenuBarItemImageCache.diagLog.debug("Live refresh loop started")
+
         while !Task.isCancelled {
-            try? await Task.sleep(for: .milliseconds(200))
+            try? await Task.sleep(for: Self.liveRefreshInterval)
             guard !Task.isCancelled else { break }
 
             let nav = appState.navigationState
@@ -393,6 +406,8 @@ final class MenuBarItemImageCache: ObservableObject {
                 await refreshImages(of: items, scale: screen.backingScaleFactor)
             }
         }
+
+        MenuBarItemImageCache.diagLog.debug("Live refresh loop stopped")
     }
 
     // MARK: Capturing Images
