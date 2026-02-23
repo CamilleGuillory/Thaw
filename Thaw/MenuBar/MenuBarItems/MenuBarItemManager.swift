@@ -2680,6 +2680,9 @@ extension MenuBarItemManager {
     ) async -> Bool {
         guard !savedSectionOrder.isEmpty else { return false }
 
+        // Don't attempt another restore while a previous restore's recache is in flight.
+        guard !isRestoringItemOrder else { return false }
+
         // Don't restore while suppressing relocations (first launch / reset).
         guard !suppressNextNewLeftmostItemRelocation else { return false }
 
