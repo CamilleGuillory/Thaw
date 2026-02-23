@@ -819,6 +819,10 @@ extension MenuBarItemManager {
                     await self?.cacheItemsRegardless(skipRecentMoveCheck: true)
                     self?.isRestoringItemOrder = false
                     continuation?.resume()
+                    // Pick up items that appeared during the lock period
+                    // (e.g. a second app launching concurrently).
+                    try? await Task.sleep(for: .milliseconds(300))
+                    await self?.cacheItemsIfNeeded()
                 }
                 return
             }
