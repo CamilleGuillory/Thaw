@@ -805,7 +805,11 @@ extension MenuBarItemManager {
                 return
             }
 
-            let didRestoreOrder = await restoreSavedItemOrder(items, controlItems: controlItems)
+            let didRestoreOrder = await restoreSavedItemOrder(
+                items,
+                controlItems: controlItems,
+                previousWindowIDs: previousWindowIDs
+            )
 
             if didRestoreOrder {
                 // Keep isRestoringItemOrder true through the recache to prevent
@@ -2677,10 +2681,15 @@ extension MenuBarItemManager {
     /// diverge from the saved order (e.g. after an app like Stats.app restarts
     /// and its items appear in a different order).
     ///
+    /// Only triggers when the set of window IDs has changed (items were
+    /// recreated by an app restart), not when items were merely repositioned
+    /// (user drag). This prevents undoing the user's manual reordering.
+    ///
     /// Returns `true` if any items were moved.
     private func restoreSavedItemOrder(
         _ items: [MenuBarItem],
-        controlItems: ControlItemPair
+        controlItems: ControlItemPair,
+        previousWindowIDs: [CGWindowID]
     ) async -> Bool {
         guard !savedSectionOrder.isEmpty else { return false }
 
@@ -2689,6 +2698,14 @@ extension MenuBarItemManager {
 
         // Don't restore while suppressing relocations (first launch / reset).
         guard !suppressNextNewLeftmostItemRelocation else { return false }
+
+        // Only restore when the window ID set has changed, indicating items
+        // were recreated (app restart). When items are merely repositioned
+        // (user drag-and-drop), the IDs stay the same and we must not undo
+        // the user's arrangement.
+        let currentWindowIDSet = Set(items.map(\.windowID))
+        let previousWindowIDSet = Set(previousWindowIDs)
+        guard currentWindowIDSet != previousWindowIDSet else { return false }
 
         // Don't interfere with items that are currently temporarily shown.
         let activelyShownTags = Set(temporarilyShownItemContexts.map {
