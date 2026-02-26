@@ -1002,6 +1002,8 @@ extension MenuBarItemManager {
         case itemResponseTimeout(MenuBarItem)
         /// A menu bar item's bounds cannot be found.
         case missingItemBounds(MenuBarItem)
+        /// The item is already in the correct position.
+        case itemAlreadyInCorrectPosition(MenuBarItem)
 
         var description: String {
             switch self {
@@ -1021,6 +1023,8 @@ extension MenuBarItemManager {
                 "\(Self.self).itemResponseTimeout(item: \(item.tag))"
             case let .missingItemBounds(item):
                 "\(Self.self).missingItemBounds(item: \(item.tag))"
+            case let .itemAlreadyInCorrectPosition(item):
+                "\(Self.self).itemAlreadyInCorrectPosition(item: \(item.tag))"
             }
         }
 
@@ -1042,11 +1046,14 @@ extension MenuBarItemManager {
                 "\"\(item.displayName)\" took too long to respond"
             case let .missingItemBounds(item):
                 "Missing bounds rectangle for \"\(item.displayName)\""
+            case let .itemAlreadyInCorrectPosition(item):
+                "Item already in correct position: \"\(item.displayName)\""
             }
         }
 
         var recoverySuggestion: String? {
             if case .itemNotMovable = self { return nil }
+            if case .itemAlreadyInCorrectPosition = self { return nil }
             return "Please try again. If the error persists, please file a bug report."
         }
     }
@@ -1757,7 +1764,7 @@ extension MenuBarItemManager {
 
         guard try await !itemHasCorrectPosition(item: item, for: destination, on: resolvedDisplayID) else {
             MenuBarItemManager.diagLog.debug("Item has correct position, cancelling move")
-            return
+            throw EventError.itemAlreadyInCorrectPosition(item)
         }
 
         MouseHelpers.hideCursor(watchdogTimeout: watchdogTimeout)
