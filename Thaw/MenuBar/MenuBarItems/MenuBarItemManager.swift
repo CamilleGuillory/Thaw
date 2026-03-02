@@ -147,6 +147,12 @@ final class MenuBarItemManager: ObservableObject {
     private var isRestoringItemOrder = false
     /// Timestamp when isRestoringItemOrder was set (for timeout detection).
     private var isRestoringItemOrderTimestamp: Date?
+    /// True during the startup settling period, during which restore operations
+    /// and section-order saves are suppressed. This prevents cascading icon moves
+    /// when many apps launch at login (login item boot) or restart in quick succession
+    /// (e.g. app update checks). Cleared after a fixed delay, then one final
+    /// restore runs to enforce the user's saved layout.
+    private var isInStartupSettling = false
     /// Persisted bundle identifiers explicitly placed in hidden section.
     private var pinnedHiddenBundleIDs = Set<String>()
     /// Persisted bundle identifiers explicitly placed in always-hidden section.
@@ -330,6 +336,27 @@ final class MenuBarItemManager: ObservableObject {
         await cacheItemsRegardless()
         MenuBarItemManager.diagLog.debug("performSetup: initial cache complete, items in cache: visible=\(itemCache[.visible].count), hidden=\(itemCache[.hidden].count), alwaysHidden=\(itemCache[.alwaysHidden].count), managedItems=\(itemCache.managedItems.count)")
         configureCancellables(with: appState)
+        // Suppress restore and section-order saves for a settling period after launch.
+        // During login (system uptime < 60 s) many apps load over ~30 s, each triggering
+        // a cache cycle; without this guard every launch notification causes a restore
+        // that conflicts with the next, producing the "icon parade" effect.
+        // After the settling period ends, one final cacheItemsRegardless() enforces the
+        // user's saved layout against whatever macOS placed items.
+        let settleDelay: Duration = ProcessInfo.processInfo.systemUptime < 60 ? .seconds(30) : .seconds(5)
+        isInStartupSettling = true
+        MenuBarItemManager.diagLog.debug("performSetup: startup settling period started (\(settleDelay))")
+        // @MainActor ensures the flag flip and final cache call are never
+        // interleaved with notification-triggered cache cycles between them.
+        Task { @MainActor [weak self] in
+            guard let self else { return }
+            try? await Task.sleep(for: settleDelay)
+            isInStartupSettling = false
+            MenuBarItemManager.diagLog.debug("performSetup: startup settling period ended, running restore")
+            // skipRecentMoveCheck: true — relocateNewLeftmostItems/relocatePendingItems
+            // may have stamped lastMoveOperationTimestamp during settling; without this
+            // flag the final restore would be silently skipped by the 5 s cooldown.
+            await cacheItemsRegardless(skipRecentMoveCheck: true)
+        }
         MenuBarItemManager.diagLog.debug("performSetup: MenuBarItemManager setup complete")
     }
 
@@ -774,7 +801,7 @@ extension MenuBarItemManager {
             isRestoringItemOrderTimestamp = nil
         }
 
-        if !isRestoringItemOrder, !isResettingLayout {
+        if !isRestoringItemOrder, !isResettingLayout, !isInStartupSettling {
             saveSectionOrder(from: context.cache)
         }
         MenuBarItemManager.diagLog.debug("Updated menu bar item cache: visible=\(context.cache[.visible].count), hidden=\(context.cache[.hidden].count), alwaysHidden=\(context.cache[.alwaysHidden].count)")
@@ -902,6 +929,16 @@ extension MenuBarItemManager {
                     await self?.cacheItemsRegardless(skipRecentMoveCheck: true)
                     continuation?.resume()
                 }
+                return
+            }
+
+            // Skip all restore logic during the startup settling period.
+            // The settling period prevents cascading icon moves when many apps
+            // load at login or restart in quick succession (app update checks).
+            // A final cacheItemsRegardless() after the period ends handles restore.
+            guard !isInStartupSettling else {
+                await uncheckedCacheItems(items: items, controlItems: controlItems, displayID: displayID)
+                MenuBarItemManager.diagLog.debug("cacheItemsRegardless: startup settling active, skipping restore")
                 return
             }
 
@@ -2955,7 +2992,10 @@ extension MenuBarItemManager {
     ) async -> Bool {
         guard !savedSectionOrder.isEmpty else { return false }
         guard !suppressNextNewLeftmostItemRelocation else { return false }
-        guard !lastMoveOperationOccurred(within: .seconds(2)) else { return false }
+        // 5 s cooldown (up from 2 s) gives more time for the system to settle after a
+        // restore before another one can start, preventing cascading icon moves when
+        // multiple apps restart in quick succession (e.g. app update checks).
+        guard !lastMoveOperationOccurred(within: .seconds(5)) else { return false }
 
         // Only restore when previous window IDs have disappeared (app restarted).
         // This prevents undoing the user's manual section moves on regular cache refreshes.
@@ -3159,7 +3199,9 @@ extension MenuBarItemManager {
         // (user drag in the Layout Bar, internal relocations, etc.). External
         // app restarts never go through our move() path, so their cache cycles
         // will have no recent move timestamp.
-        guard !lastMoveOperationOccurred(within: .seconds(2)) else { return false }
+        // 5 s cooldown (up from 2 s) matches restoreItemsToSavedSections and
+        // prevents back-to-back restores when apps restart in quick succession.
+        guard !lastMoveOperationOccurred(within: .seconds(5)) else { return false }
 
         // Only restore when previous window IDs have disappeared, indicating
         // an app restarted (old windows destroyed, new ones created). During
