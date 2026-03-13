@@ -724,6 +724,12 @@
             "state" : "translated",
             "value" : "%1$@ в данный момент запущен. Одновременная работа нескольких менеджеров строки меню может вызвать проблемы с отображением и непредвиденное поведение. Рекомендуется закрыть %2$@ перед использованием Thaw."
           }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ 目前正在執行。同時執行多個選單列管理工具可能導致顯示問題和非預期的行為。建議在使用 Thaw 之前先結束 %2$@。"
+          }
         }
       }
     },
@@ -1010,7 +1016,7 @@
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%@ 需要您的許可來管理選單列。"
+            "value" : "%@ 需要您的權限來管理選單列。"
           }
         }
       }
@@ -1422,6 +1428,12 @@
           }
         },
         "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld fps"
+          }
+        },
+        "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "%lld fps"
@@ -1846,6 +1858,12 @@
             "state" : "translated",
             "value" : "+"
           }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "+"
+          }
         }
       }
     },
@@ -1900,6 +1918,12 @@
             "state" : "translated",
             "value" : "⌘"
           }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "⌘"
+          }
         }
       }
     },
@@ -1950,6 +1974,12 @@
           }
         },
         "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "⎋"
+          }
+        },
+        "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "⎋"
@@ -2876,6 +2906,12 @@
             "state" : "translated",
             "value" : "始终显示隐藏项目"
           }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "一律顯示隱藏項目"
+          }
         }
       }
     },
@@ -2936,6 +2972,12 @@
             "state" : "translated",
             "value" : "始终在显示器的菜单栏中显示隐藏的项目。"
           }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在此顯示器上一律在選單列中顯示隱藏的選單列項目。"
+          }
         }
       }
     },
@@ -2995,6 +3037,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "使用热键时，始终将 %@ 栏显示在鼠标指针的位置。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "使用快速鍵顯示 %@ 列時，一律在滑鼠游標所在位置顯示。"
           }
         }
       }
@@ -4585,6 +4633,12 @@
             "state" : "translated",
             "value" : "%@ simgesi taşınamıyor."
           }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "無法移動 %@ 圖示。"
+          }
         }
       }
     },
@@ -5464,6 +5518,12 @@
             "state" : "translated",
             "value" : "Chevron (Aşağı)"
           }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "V 形箭頭"
+          }
         }
       }
     },
@@ -5710,6 +5770,12 @@
             "state" : "translated",
             "value" : "Gizli menü çubuğu öğelerini göstermek için menü çubuğunda boş bir alana tıklayın."
           }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "按一下選單列的空白區域以顯示隱藏的選單列項目。"
+          }
         }
       }
     },
@@ -5860,6 +5926,12 @@
             "state" : "translated",
             "value" : "Onayla"
           }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "確認"
+          }
         }
       }
     },
@@ -5907,6 +5979,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Обнаружен конфликтующий менеджер строки меню"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "偵測到衝突的選單列管理工具"
           }
         }
       }
@@ -6051,6 +6129,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Продолжить всё равно"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "仍然繼續"
           }
         }
       }
@@ -6874,6 +6958,12 @@
             "state" : "translated",
             "value" : "Vazgeç"
           }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "捨棄"
+          }
         }
       }
     },
@@ -7570,6 +7660,12 @@
             "state" : "translated",
             "value" : "Her zaman gizli menü çubuğu öğelerini göstermek için menü çubuğunda boş bir alana çift tıklayın."
           }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "按兩下選單列的空白區域以顯示永久隱藏的選單列項目。"
+          }
         }
       }
     },
@@ -7629,6 +7725,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "双击显示始终隐藏的项目"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "按兩下以顯示永久隱藏項目"
           }
         }
       }
@@ -7972,6 +8074,12 @@
             "state" : "translated",
             "value" : "E"
           }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "E"
+          }
         }
       }
     },
@@ -8121,6 +8229,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Adı Düzenle"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "編輯名稱"
           }
         }
       }
@@ -10198,6 +10312,12 @@
             "state" : "translated",
             "value" : "面板中动画菜单栏图标的刷新频率。数值越大越流畅，但会增加CPU占用。"
           }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "面板中動態選單列圖示的重新整理頻率。數值越高越流暢，但會使用較多 CPU。"
+          }
         }
       }
     },
@@ -10449,6 +10569,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "图标刷新率"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "圖示重新整理頻率"
           }
         }
       }
@@ -11364,6 +11490,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Sol kenar boşluğu"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "左邊距"
           }
         }
       }
@@ -13721,6 +13853,12 @@
             "state" : "translated",
             "value" : "Bu ekran için %@ Çubuğu etkin olduğundan kullanılamıyor."
           }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "無法使用，因為此顯示器已啟用 %@ 列。"
+          }
         }
       }
     },
@@ -14163,7 +14301,7 @@
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "一個或多個區段分隔線已被 macOS 隱藏"
+            "value" : "一個或多個區域分隔線已被 macOS 隱藏"
           }
         }
       }
@@ -14789,6 +14927,12 @@
             "state" : "translated",
             "value" : "Завершить Thaw"
           }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "結束 Thaw"
+          }
         }
       }
     },
@@ -15123,6 +15267,12 @@
             "state" : "translated",
             "value" : "Сбросить %@"
           }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "重置 %@"
+          }
         }
       }
     },
@@ -15177,6 +15327,12 @@
             "state" : "translated",
             "value" : "重置所有设置"
           }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "重置所有設定"
+          }
         }
       }
     },
@@ -15230,6 +15386,12 @@
             "state" : "translated",
             "value" : "将所有设置重置为默认值，此操作无法撤销。"
           }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "將所有設定重置為預設值。此操作無法復原。"
+          }
         }
       }
     },
@@ -15282,6 +15444,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "确定重置所有设置？"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "重置所有設定？"
           }
         }
       }
@@ -16296,6 +16464,12 @@
             "state" : "translated",
             "value" : "Sağ kenar boşluğu"
           }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "右邊距"
+          }
         }
       }
     },
@@ -16620,6 +16794,12 @@
             "state" : "translated",
             "value" : "ツールチップを表示するには、画面収録の権限が必要です。"
           }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "需要螢幕錄影權限才能顯示提示。"
+          }
         }
       }
     },
@@ -16655,6 +16835,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "メニューバーの項目を検索するには、画面収録の権限が必要です。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "需要螢幕錄影權限才能顯示提示。"
           }
         }
       }
@@ -17580,6 +17766,12 @@
             "state" : "translated",
             "value" : "将鼠标悬停在实际菜单栏的项目上时显示提示框。"
           }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在選單列中將游標懸停於選單列項目時顯示提示。"
+          }
         }
       }
     },
@@ -17831,6 +18023,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "使用快捷键时显示在鼠标指针位置"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "使用快速鍵時在游標位置顯示"
           }
         }
       }
@@ -18233,6 +18431,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Menü çubuğu arka planını göster"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "顯示選單列背景"
           }
         }
       }
@@ -18678,6 +18882,12 @@
             "state" : "translated",
             "value" : "在菜单栏显示 %@ 图标。单击显示隐藏项目，双击显示永久隐藏的项目，右键单击打开设置。"
           }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在選單列中顯示 %@ 圖示。按一下以顯示隱藏項目，按兩下以顯示永久隱藏項目，按右鍵以開啟設定。"
+          }
         }
       }
     },
@@ -18738,6 +18948,12 @@
             "state" : "translated",
             "value" : "在菜单栏中显示提示框"
           }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在選單列中顯示提示"
+          }
         }
       }
     },
@@ -18797,6 +19013,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "显示系统菜单栏背景。若使用动态壁纸或系统设置中未启用“显示菜单栏背景”，请开启此功能。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "顯示系統的選單列背景。如果您使用動態桌布，或在系統設定中停用了「顯示選單列背景」，請啟用此選項。"
           }
         }
       }
@@ -19658,7 +19880,7 @@
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "支持 %@"
+            "value" : "贊助 %@"
           }
         }
       }
@@ -20098,6 +20320,12 @@
             "state" : "translated",
             "value" : "%@ simgesi her zaman görünür bölümde kalmalıdır."
           }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ 圖示必須始終保留在顯示區域中。"
+          }
         }
       }
     },
@@ -20157,6 +20385,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "显示菜单栏项目提示框前的等待时长。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在選單列項目上顯示提示前的等待時間。"
           }
         }
       }
@@ -20396,6 +20630,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Все настройки будут сброшены до значений по умолчанию. Это действие нельзя отменить."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "此操作將把所有設定重置為預設值。此操作無法復原。"
           }
         }
       }
@@ -21033,6 +21273,12 @@
             "state" : "translated",
             "value" : "提示框延迟"
           }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "提示延遲"
+          }
         }
       }
     },
@@ -21092,6 +21338,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "提示框"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "提示"
           }
         }
       }
