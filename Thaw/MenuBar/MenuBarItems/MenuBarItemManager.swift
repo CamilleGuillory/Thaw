@@ -1883,6 +1883,63 @@ extension MenuBarItemManager {
         }
     }
 
+    /// Checks if a menu bar item is in a "blocked" state (positioned at x=-1 off-screen).
+    /// Items in this state are stuck and cannot be interacted with normally.
+    private nonisolated func isItemBlocked(_ item: MenuBarItem) async -> Bool {
+        do {
+            let bounds = try await getCurrentBounds(for: item)
+            // x=-1 is the sentinel value macOS uses for "blocked" items
+            return bounds.origin.x == -1
+        } catch {
+            // If we can't get bounds, assume it's not blocked
+            return false
+        }
+    }
+
+    /// Validates that an item moved to the hidden section didn't get stuck at x=-1.
+    /// If the item is blocked, attempts to restore it to the visible section.
+    private func validateItemPositionAfterMove(
+        item: MenuBarItem,
+        destination: MoveDestination,
+        on displayID: CGDirectDisplayID
+    ) async {
+        // Only check when moving to hidden sections (left of control items)
+        guard case .leftOfItem = destination else { return }
+
+        // Check if item got stuck at x=-1
+        if await isItemBlocked(item) {
+            MenuBarItemManager.diagLog.warning("Item \(item.logString) stuck at x=-1 after move - attempting recovery")
+
+            // Find the control item to use as anchor for recovery
+            guard let appState else { return }
+            guard let hiddenControlItem = appState.menuBarManager.controlItem(withName: .hidden)?.window else {
+                MenuBarItemManager.diagLog.error("Cannot recover item: missing hidden control item window")
+                return
+            }
+
+            // Create a MenuBarItem representation of the control item for the destination
+            // We need to find it in the current cache
+            let items = await MenuBarItem.getMenuBarItems(option: .activeSpace)
+            guard let hiddenMenuBarItem = items.first(where: { $0.windowID == CGWindowID(hiddenControlItem.windowNumber) }) else {
+                MenuBarItemManager.diagLog.error("Cannot recover item: control item not found in menu bar items")
+                return
+            }
+
+            // Attempt to move the item back to the visible section
+            do {
+                try await move(
+                    item: item,
+                    to: .rightOfItem(hiddenMenuBarItem),
+                    on: displayID,
+                    skipInputPause: true
+                )
+                MenuBarItemManager.diagLog.info("Successfully recovered \(item.logString) from blocked state to visible section")
+            } catch {
+                MenuBarItemManager.diagLog.error("Failed to recover \(item.logString) from blocked state: \(error)")
+            }
+        }
+    }
+
     /// Moves a menu bar item to the given destination.
     ///
     /// - Parameters:
@@ -1899,6 +1956,13 @@ extension MenuBarItemManager {
             throw EventError.itemNotMovable(item)
         }
         guard let appState else {
+            throw EventError.cannotComplete
+        }
+
+        // Check if item is already in a blocked state before attempting to move
+        // This prevents trying to move items that are already stuck
+        if await isItemBlocked(item) {
+            MenuBarItemManager.diagLog.warning("Skipping move for \(item.logString) - item is already blocked (x=-1)")
             throw EventError.cannotComplete
         }
 
@@ -1964,6 +2028,8 @@ extension MenuBarItemManager {
                 // Verify the item actually reached the correct position.
                 if try await itemHasCorrectPosition(item: item, for: destination, on: resolvedDisplayID) {
                     MenuBarItemManager.diagLog.debug("Attempt \(n) succeeded and verified, finished with move")
+                    // Validate that item didn't get stuck when moving to hidden section
+                    await validateItemPositionAfterMove(item: item, destination: destination, on: resolvedDisplayID)
                     return
                 }
                 MenuBarItemManager.diagLog.debug("Attempt \(n) events succeeded but item not at destination, retrying")
@@ -1983,6 +2049,9 @@ extension MenuBarItemManager {
                 throw EventError.cannotComplete
             }
         }
+
+        // After all attempts, validate the final position
+        await validateItemPositionAfterMove(item: item, destination: destination, on: resolvedDisplayID)
     }
 }
 
