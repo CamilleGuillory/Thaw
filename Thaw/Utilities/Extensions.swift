@@ -783,6 +783,17 @@ extension NSScreen {
             return nil
         }
 
+        // Avoid counting the notch as usable application menu width.
+        if let notch = frameOfNotch {
+            let cappedWidth = min(applicationMenuFrame.width, notch.minX - frame.minX)
+            return CGRect(
+                x: applicationMenuFrame.minX,
+                y: applicationMenuFrame.minY,
+                width: cappedWidth,
+                height: applicationMenuFrame.height
+            )
+        }
+
         return applicationMenuFrame
     }
 }
