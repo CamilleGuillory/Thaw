@@ -101,12 +101,12 @@ Thaw is currently available in the following languages:
     </tr>
     <tr>
         <td><b>한국어</b></td>
-        <td>Partial</td>
+        <td>Complete</td>
         <td align="center">🇰🇷</td>
         <td><img src="https://geps.dev/progress/100" /></td>
         <td></td>
         <td><b>Magyar</b></td>
-        <td></td>
+        <td>Partial</td>
         <td align="center">🇭🇺</td>
         <td><img src="https://geps.dev/progress/81" /></td>
     </tr>
