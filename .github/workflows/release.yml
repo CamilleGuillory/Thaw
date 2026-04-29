@@ -21,7 +21,7 @@ jobs:
       PROJECT_NAME: "Thaw.xcodeproj"
       SCHEME_NAME: "Thaw"
       APP_NAME: "Thaw.app"
-      ZIP_NAME: "Thaw.zip"
+      DMG_NAME: "Thaw.dmg"
       MACOSX_DEPLOYMENT_TARGET: "26.0"
     steps:
       - name: Checkout code
@@ -102,8 +102,14 @@ jobs:
             -exportPath build/Export \
             -exportOptionsPlist /tmp/ExportOptions.plist
 
-          cd build/Export
-          zip -r "../${{ env.ZIP_NAME }}" "${{ env.APP_NAME }}"
+          mkdir -p /tmp/dmg-staging
+          cp -r "build/Export/${{ env.APP_NAME }}" /tmp/dmg-staging/
+          ln -s /Applications /tmp/dmg-staging/Applications
+          hdiutil create \
+            -volname "Thaw" \
+            -srcfolder /tmp/dmg-staging \
+            -ov -format UDZO \
+            "build/${{ env.DMG_NAME }}"
 
       - name: Notarize
         if: ${{ !inputs.dry_run }}
@@ -112,23 +118,21 @@ jobs:
           APPLE_ID_PASSWORD: ${{ secrets.APPLE_ID_PASSWORD }}
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
         run: |
-          xcrun notarytool submit "build/${{ env.ZIP_NAME }}" \
+          xcrun notarytool submit "build/${{ env.DMG_NAME }}" \
             --apple-id "$APPLE_ID" \
             --password "$APPLE_ID_PASSWORD" \
             --team-id "$APPLE_TEAM_ID" \
             --wait
 
-          xcrun stapler staple "build/Export/${{ env.APP_NAME }}"
-          xcrun stapler validate "build/Export/${{ env.APP_NAME }}"
-          cd build/Export
-          zip -r "../${{ env.ZIP_NAME }}" "${{ env.APP_NAME }}"
+          xcrun stapler staple "build/${{ env.DMG_NAME }}"
+          xcrun stapler validate "build/${{ env.DMG_NAME }}"
 
       - name: Create GitHub Release
         if: ${{ !inputs.dry_run }}
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ inputs.tag || github.ref_name }}
-          files: build/${{ env.ZIP_NAME }}
+          files: build/${{ env.DMG_NAME }}
           generate_release_notes: true
           draft: true
         env:
