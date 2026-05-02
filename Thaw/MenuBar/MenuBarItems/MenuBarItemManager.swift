@@ -4235,7 +4235,7 @@ extension MenuBarItemManager {
         // baseIdentifier so there's no collision.
         var savedSectionForBaseID = [String: MenuBarSection.Name]()
         var savedSectionByNamespace = [String: MenuBarSection.Name]()
-        var ambiguousNamespaces = Set<String>()
+        var namespaceSectionCounts = [String: [MenuBarSection.Name: Int]]()
         for (sectionKeyString, identifiers) in savedSectionOrder {
             guard let section = sectionName(for: sectionKeyString) else { continue }
             for identifier in identifiers {
@@ -4243,18 +4243,24 @@ extension MenuBarItemManager {
                 let baseID = identifier.split(separator: ":", maxSplits: 2).prefix(2).joined(separator: ":")
                 savedSectionForBaseID[baseID] = section
 
-                // Also track namespace for dynamic apps
+                // Count namespace occurrences per section for majority-vote fallback.
+                // Dynamic-title apps (Dato, Raycast, etc.) change their item title
+                // on every appearance, so baseID matching fails. We resolve namespace
+                // ambiguity by picking the section where most of that namespace's items
+                // were saved, rather than giving up entirely.
                 let ns = identifier.split(separator: ":", maxSplits: 1).first.map(String.init) ?? identifier
-                if ambiguousNamespaces.contains(ns) {
-                    continue
-                }
-                if let existing = savedSectionByNamespace[ns], existing != section {
-                    savedSectionByNamespace.removeValue(forKey: ns)
-                    ambiguousNamespaces.insert(ns)
-                } else {
-                    savedSectionByNamespace[ns] = section
-                }
+                namespaceSectionCounts[ns, default: [:]][section, default: 0] += 1
             }
+        }
+        // Tiebreak: prefer visible > hidden > alwaysHidden when counts equal.
+        let sectionOrder = MenuBarSection.Name.allCases
+        for (ns, counts) in namespaceSectionCounts {
+            savedSectionByNamespace[ns] = counts.max(by: { a, b in
+                if a.value != b.value { return a.value < b.value }
+                let aIdx = sectionOrder.firstIndex(of: a.key) ?? 0
+                let bIdx = sectionOrder.firstIndex(of: b.key) ?? 0
+                return aIdx > bIdx
+            })?.key ?? .hidden
         }
 
         // Classify current items by physical position.
