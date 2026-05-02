@@ -1615,8 +1615,7 @@ extension MenuBarItemManager {
             return
         }
 
-        // Cross-section restore: move items back to their saved section
-        // before restoreSavedItemOrder handles within-section reordering.
+        // Cross-section restore: move items back to their saved section.
         // Set the flag before calling so that any intermediate cache
         // updates during move() don't overwrite the saved section order.
         isRestoringItemOrder = true
@@ -1640,41 +1639,10 @@ extension MenuBarItemManager {
             }
             return
         }
-        // Note: isRestoringItemOrder remains true here so that if a concurrent
-        // cache call occurs (e.g., from app launch notification), it won't
-        // prematurely reset the flag and allow saveSectionOrder to run while
-        // we're still in the cooldown period from previous moves.
-
-        let didRestoreOrder = await restoreSavedItemOrder(
-            items,
-            controlItems: controlItems,
-            previousWindowIDs: previousWindowIDs
-        )
-
-        if didRestoreOrder {
-            // Keep isRestoringItemOrder true through the recache to prevent
-            // saving intermediate item positions while macOS settles the moves.
-            isRestoringItemOrder = true
-            isRestoringItemOrderTimestamp = Date()
-            MenuBarItemManager.diagLog.debug("Restored saved item order; scheduling recache")
-            let continuation = self.backgroundCacheContinuation
-            self.backgroundCacheContinuation = nil
-            Task { [weak self] in
-                try? await Task.sleep(for: MenuBarItemManager.uiSettleDelay)
-                await self?.cacheItemsRegardless(skipRecentMoveCheck: true)
-                self?.isRestoringItemOrder = false
-                continuation?.resume()
-                // Pick up items that appeared during the lock period
-                // (e.g. a second app launching concurrently).
-                try? await Task.sleep(for: MenuBarItemManager.uiSettleDelay)
-                await self?.cacheItemsIfNeeded()
-            }
-            return
-        }
-
-        // No restore happened — reset flag so saveSectionOrder can persist
-        // the current cache state (handles user manual moves via Layout Bar
-        // that would otherwise never be recorded).
+        // Phase 1 either didn't run or returned false. Clear the flag so
+        // saveSectionOrder can persist the current cache state (handles
+        // user manual moves via Layout Bar that would otherwise never be
+        // recorded).
         isRestoringItemOrder = false
         isRestoringItemOrderTimestamp = nil
 
@@ -4189,7 +4157,6 @@ extension MenuBarItemManager {
     /// macOS places its items in a different section than where the user
     /// arranged them.
     ///
-    /// `restoreSavedItemOrder` only reorders items *within* a section.
     /// This function handles the *cross-section* case: for example,
     /// Stats.app items that the user placed in the visible section but
     /// macOS put back in the hidden section upon relaunch.
@@ -4407,140 +4374,6 @@ extension MenuBarItemManager {
     ///   matches the new item.
     ///
     /// Returns `true` if any items were moved.
-    private func restoreSavedItemOrder(
-        _ items: [MenuBarItem],
-        controlItems: ControlItemPair,
-        previousWindowIDs: [CGWindowID]
-    ) async -> Bool {
-        guard !savedSectionOrder.isEmpty else { return false }
-
-        // Don't attempt another restore while a previous restore's recache is in flight.
-        guard !isRestoringItemOrder else { return false }
-
-        // Don't restore while suppressing relocations (first launch / reset).
-        guard !suppressNextNewLeftmostItemRelocation else { return false }
-
-        // Don't restore when we recently performed our own move operations
-        // (user drag in the Layout Bar, internal relocations, etc.). External
-        // app restarts never go through our move() path, so their cache cycles
-        // will have no recent move timestamp.
-        // 5 s cooldown (up from 2 s) matches restoreItemsToSavedSections and
-        // prevents back-to-back restores when apps restart in quick succession.
-        guard !lastMoveOperationOccurred(within: .seconds(5)) else { return false }
-
-        // Only restore when previous window IDs have disappeared, indicating
-        // an app restarted (old windows destroyed, new ones created). During
-        // move operations macOS can briefly report duplicate windows for the
-        // same item, which adds transient IDs to the current set. Checking
-        // for removed IDs (rather than any set difference) avoids false
-        // positives from these duplicates and from user drag-and-drop, which
-        // only repositions existing windows without removing any.
-        let currentWindowIDSet = Set(items.lazy.map(\.windowID))
-        let previousWindowIDSet = Set(previousWindowIDs)
-        guard !previousWindowIDSet.isSubset(of: currentWindowIDSet) else { return false }
-
-        // Don't interfere with items that are currently temporarily shown.
-        let activelyShownTags = Set(temporarilyShownItemContexts.map(\.tag.tagIdentifier))
-
-        // Build a lookup from uniqueIdentifier → MenuBarItem for all current non-control items.
-        var itemsByID = [String: MenuBarItem]()
-        for item in items where !item.isControlItem {
-            itemsByID[item.uniqueIdentifier] = item
-        }
-
-        // Classify current items into sections using position-based detection.
-        var context = CacheContext(
-            controlItems: controlItems,
-            displayID: Bridging.getActiveMenuBarDisplayID()
-        )
-        var currentSectionItems = [String: [MenuBarItem]]()
-        for item in items where !item.isControlItem && context.isValidForCaching(item) {
-            if let section = context.findSection(for: item) {
-                let key = sectionKey(for: section)
-                currentSectionItems[key, default: []].append(item)
-            }
-        }
-
-        var didMove = false
-
-        for sectionName in MenuBarSection.Name.allCases {
-            let sectionKeyString = sectionKey(for: sectionName)
-            guard let savedIdentifiers = savedSectionOrder[sectionKeyString],
-                  let currentItems = currentSectionItems[sectionKeyString],
-                  !currentItems.isEmpty
-            else {
-                continue
-            }
-
-            // Filter saved identifiers to only those present in this section right now.
-            let currentIDSet = Set(currentItems.map(\.uniqueIdentifier))
-            let filteredSaved = savedIdentifiers.filter { currentIDSet.contains($0) }
-
-            guard !filteredSaved.isEmpty else { continue }
-
-            // Build the current order (identifiers only, preserving cache array order = right-to-left).
-            let currentOrder = currentItems.map(\.uniqueIdentifier)
-
-            // Skip section if the relative order of the overlapping items already matches.
-            let filteredSavedSet = Set(filteredSaved)
-            let currentFiltered = currentOrder.filter { filteredSavedSet.contains($0) }
-            guard currentFiltered != filteredSaved else { continue }
-
-            MenuBarItemManager.diagLog.info(
-                """
-                Restoring saved item order for \(sectionKeyString) section \
-                (\(filteredSaved.count) items)
-                """
-            )
-
-            // Find the first valid anchor that is not temporarily shown.
-            var anchorIndex = 0
-            var anchor: MenuBarItem?
-            while anchorIndex < filteredSaved.count {
-                guard let candidate = itemsByID[filteredSaved[anchorIndex]] else {
-                    anchorIndex += 1
-                    continue
-                }
-                let tagString = candidate.tag.tagIdentifier
-                if activelyShownTags.contains(tagString) {
-                    anchorIndex += 1
-                    continue
-                }
-                anchor = candidate
-                break
-            }
-            guard let anchor else { continue }
-
-            // Move items right-to-left: the anchor is the rightmost valid item;
-            // each subsequent item is placed to its left.
-            var currentAnchor = anchor
-            for i in (anchorIndex + 1) ..< filteredSaved.count {
-                guard let item = itemsByID[filteredSaved[i]] else { continue }
-
-                // Skip items that are currently temporarily shown.
-                let tagString = item.tag.tagIdentifier
-                guard !activelyShownTags.contains(tagString) else { continue }
-
-                do {
-                    try await move(item: item, to: .leftOfItem(currentAnchor), skipInputPause: true)
-                    didMove = true
-                    // Only advance the anchor after a successful move so that
-                    // the next item targets the last correctly placed position.
-                    currentAnchor = item
-                } catch {
-                    MenuBarItemManager.diagLog.error(
-                        """
-                        Failed to restore position for \(item.logString) in \
-                        \(sectionKeyString): \(error)
-                        """
-                    )
-                }
-            }
-        }
-
-        return didMove
-    }
-
     /// Returns the best-known bounds for a menu bar item.
     private func bestBounds(for item: MenuBarItem) -> CGRect {
         Bridging.getWindowBounds(for: item.windowID) ?? item.bounds
