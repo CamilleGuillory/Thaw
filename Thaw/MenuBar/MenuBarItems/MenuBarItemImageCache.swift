@@ -8,6 +8,7 @@
 
 import Cocoa
 import Combine
+import os.lock
 
 /// Cache for menu bar item images.
 final class MenuBarItemImageCache: ObservableObject, @unchecked Sendable {
@@ -84,7 +85,7 @@ final class MenuBarItemImageCache: ObservableObject, @unchecked Sendable {
         let lastFailureTime: Date
     }
 
-    private var failedCaptures: [MenuBarItemTag: FailedCapture] = [:]
+    private let failedCapturesLock = OSAllocatedUnfairLock<[MenuBarItemTag: FailedCapture]>(initialState: [:])
 
     /// Configuration for failed capture handling
     private static let maxFailuresBeforeBlacklist = 3
@@ -546,6 +547,12 @@ final class MenuBarItemImageCache: ObservableObject, @unchecked Sendable {
             }
 
             for section in sections {
+                if appState.itemManager.lastMoveOperationOccurred(within: .seconds(2)) {
+                    continue
+                }
+                if appState.itemManager.isResettingLayout {
+                    continue
+                }
                 let items = appState.itemManager.itemCache.managedItems(for: section)
                 guard !items.isEmpty else { continue }
                 let scale = screen.backingScaleFactor
@@ -937,72 +944,70 @@ final class MenuBarItemImageCache: ObservableObject, @unchecked Sendable {
 
     /// Checks if an item should be skipped due to repeated capture failures.
     private func shouldSkipCapture(for item: MenuBarItem) -> Bool {
-        guard let failed = failedCaptures[item.tag] else {
-            return false
-        }
-
-        // If failed too many times and within cooldown period, skip
-        if failed.failureCount >= Self.maxFailuresBeforeBlacklist {
-            let timeSinceFailure = Date().timeIntervalSince(
-                failed.lastFailureTime
-            )
-            if timeSinceFailure < Self.blacklistCooldownSeconds {
-                return true
-            } else {
-                // Cooldown expired, reset failure count
-                failedCaptures.removeValue(forKey: item.tag)
+        failedCapturesLock.withLock { dict in
+            guard let failed = dict[item.tag] else {
                 return false
             }
-        }
 
-        return false
+            if failed.failureCount >= Self.maxFailuresBeforeBlacklist {
+                let timeSinceFailure = Date().timeIntervalSince(
+                    failed.lastFailureTime
+                )
+                if timeSinceFailure < Self.blacklistCooldownSeconds {
+                    return true
+                } else {
+                    dict.removeValue(forKey: item.tag)
+                    return false
+                }
+            }
+
+            return false
+        }
     }
 
     /// Records a capture failure for an item.
     private func recordCaptureFailure(for item: MenuBarItem) {
         let now = Date()
-        let existing = failedCaptures[item.tag]
+        failedCapturesLock.withLock { dict in
+            let existing = dict[item.tag]
 
-        if let existing {
-            let newCount = existing.failureCount + 1
-            failedCaptures[item.tag] = FailedCapture(
-                tag: item.tag,
-                failureCount: newCount,
-                lastFailureTime: now
-            )
+            if let existing {
+                let newCount = existing.failureCount + 1
+                dict[item.tag] = FailedCapture(
+                    tag: item.tag,
+                    failureCount: newCount,
+                    lastFailureTime: now
+                )
 
-            // Log when an item reaches blacklist threshold
-            if newCount == Self.maxFailuresBeforeBlacklist {
-                MenuBarItemImageCache.diagLog.info(
-                    "Item blacklisted after \(newCount) failures: \(item.logString) (will retry after \(Self.blacklistCooldownSeconds)s cooldown)"
+                if newCount == Self.maxFailuresBeforeBlacklist {
+                    MenuBarItemImageCache.diagLog.info(
+                        "Item blacklisted after \(newCount) failures: \(item.logString) (will retry after \(Self.blacklistCooldownSeconds)s cooldown)"
+                    )
+                }
+            } else {
+                dict[item.tag] = FailedCapture(
+                    tag: item.tag,
+                    failureCount: 1,
+                    lastFailureTime: now
                 )
             }
-        } else {
-            failedCaptures[item.tag] = FailedCapture(
-                tag: item.tag,
-                failureCount: 1,
-                lastFailureTime: now
-            )
-        }
 
-        // Clean up old failed entries
-        cleanupOldFailedEntries()
+            let cutoff = now.addingTimeInterval(-Self.blacklistCooldownSeconds)
+            dict = dict.filter { _, failed in
+                failed.lastFailureTime > cutoff
+            }
+        }
     }
 
     /// Records a successful capture for an item (resets failure count).
     private func recordCaptureSuccess(for item: MenuBarItem) {
-        if let existing = failedCaptures.removeValue(forKey: item.tag), existing.failureCount >= 2 {
+        let recovered = failedCapturesLock.withLock { dict in
+            dict.removeValue(forKey: item.tag)
+        }
+        if let existing = recovered, existing.failureCount >= 2 {
             MenuBarItemImageCache.diagLog.info(
                 "Item recovered after \(existing.failureCount) previous failures: \(item.logString)"
             )
-        }
-    }
-
-    /// Cleans up old failed capture entries that have expired.
-    private func cleanupOldFailedEntries() {
-        let cutoff = Date().addingTimeInterval(-Self.blacklistCooldownSeconds)
-        failedCaptures = failedCaptures.filter { _, failed in
-            failed.lastFailureTime > cutoff
         }
     }
 
@@ -1135,8 +1140,11 @@ final class MenuBarItemImageCache: ObservableObject, @unchecked Sendable {
     @MainActor
     func performCacheCleanup() {
         let removedCount = validateAndCleanupInvalidEntries()
-        let failedCleared = failedCaptures.count
-        failedCaptures.removeAll()
+        let failedCleared = failedCapturesLock.withLock { dict in
+            let count = dict.count
+            dict.removeAll()
+            return count
+        }
         MenuBarItemImageCache.diagLog.info(
             "Manual cache cleanup completed: removed \(removedCount) invalid entries, cleared \(failedCleared) failed captures"
         )
@@ -1149,10 +1157,9 @@ final class MenuBarItemImageCache: ObservableObject, @unchecked Sendable {
         let lruSize = accessTimestamps.count
         let maxSize = Self.maxCacheSize
         let usagePercent = (imageSize * 100) / maxSize
-        let failedCount = failedCaptures.count
-        let blacklistedCount = failedCaptures.values.count(where: {
-            $0.failureCount >= Self.maxFailuresBeforeBlacklist
-        })
+        let (failedCount, blacklistedCount) = failedCapturesLock.withLock { dict in
+            (dict.count, dict.values.count(where: { $0.failureCount >= Self.maxFailuresBeforeBlacklist }))
+        }
 
         let lruSorted = accessTimestamps.sorted { $0.value < $1.value }
         let lruDescription = lruSorted.map { "\($0.key)" }.joined(separator: ", ")
@@ -1250,7 +1257,7 @@ final class MenuBarItemImageCache: ObservableObject, @unchecked Sendable {
             // menu bar item whose window briefly disappeared). This prevents
             // the IceBar and search from showing empty icons while the item's
             // app is still running.
-            let recentlyFailedTags = Set(failedCaptures.keys)
+            let recentlyFailedTags = failedCapturesLock.withLock { Set($0.keys) }
 
             // Remove images for items that no longer exist in the item cache,
             // but preserve images for items that have recent capture failures
@@ -1441,7 +1448,7 @@ final class MenuBarItemImageCache: ObservableObject, @unchecked Sendable {
         images.removeAll()
         accessTimestamps.removeAll()
         accessCounter = 0
-        failedCaptures.removeAll()
+        failedCapturesLock.withLock { $0.removeAll() }
     }
 
     // MARK: Cache Failed
