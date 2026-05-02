@@ -42,7 +42,7 @@ struct AutomationSettingsPane: View {
     }
 
     private var securityNote: some View {
-        CalloutBox("Settings URI is disabled. External apps cannot read or modify Thaw settings.") {
+        CalloutBox("Settings URI is disabled. External apps cannot read or modify \(Constants.displayName) settings.") {
             Image(systemName: "lock.fill")
                 .foregroundStyle(.green)
         }
@@ -185,10 +185,10 @@ struct AutomationSettingsPane: View {
                 }())
 
                 #if DEBUG
-                    Button("Add Thaw (Test)") {
+                    Button("Add \(Constants.displayName) (Test)") {
                         settings.addCurrentApp()
                     }
-                    .help("Add Thaw itself for testing")
+                    .help("Add \(Constants.displayName) itself for testing")
                 #endif
             }
 
@@ -238,7 +238,7 @@ struct AutomationSettingsPane: View {
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
 
-                Text("Whitelisted apps can read settings, toggle boolean options, set numeric values (timers, delays), change enum settings (rehide strategy, Thaw Bar location), and modify per-display configurations. This includes auto-rehide, show on click/hover/scroll/double-click, Thaw Bar, hide application menus, enable always-hidden section, show tooltips, and diagnostic logging.")
+                Text("Whitelisted apps can read settings, toggle boolean options, set numeric values (timers, delays), change enum settings (rehide strategy, \(Constants.displayName) Bar location), and modify per-display configurations. This includes auto-rehide, show on click/hover/scroll/double-click, \(Constants.displayName) Bar, hide application menus, enable always-hidden section, show tooltips, and diagnostic logging.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
