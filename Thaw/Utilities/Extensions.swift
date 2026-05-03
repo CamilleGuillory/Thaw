@@ -672,33 +672,54 @@ extension NSScreen {
             cache.menuBarHeights = cache.menuBarHeights.filter { connectedDisplayIDs.contains($0.key) }
             cache.menuFrames = cache.menuFrames.filter { connectedDisplayIDs.contains($0.key) }
         }
+        pendingRetryDisplays.withLock { $0 = $0.filter { connectedDisplayIDs.contains($0) } }
+    }
+
+    /// Tracks displays with a pending menu bar height retry.
+    private static let pendingRetryDisplays = OSAllocatedUnfairLock(initialState: Set<CGDirectDisplayID>())
+
+    /// Schedules a one-shot deferred retry to populate the menu bar height
+    /// cache for a display after a transient unavailability (e.g. during
+    /// startup before the Window Server reports the Menubar window).
+    /// At most one pending retry per display is kept.
+    private static func scheduleMenuBarHeightRetry(for displayID: CGDirectDisplayID) {
+        let shouldSchedule = pendingRetryDisplays.withLock { $0.insert(displayID).inserted }
+        guard shouldSchedule else { return }
+        DispatchQueue.global(qos: .utility).asyncAfter(deadline: .now() + .milliseconds(500)) {
+            if let menuBarWindow = WindowInfo.menuBarWindow(for: displayID) {
+                let height = menuBarWindow.bounds.height
+                if height > 0 {
+                    NSScreen.displayCache.withLock { $0.menuBarHeights[displayID] = height }
+                    NSScreen.diagLog.debug("getMenuBarHeight: retry succeeded for display=\(displayID) height=\(Double(height))")
+                }
+            }
+            _ = pendingRetryDisplays.withLock { $0.remove(displayID) }
+        }
     }
 
     /// Returns the height of the menu bar on this screen.
     ///
-    /// Results are cached per-display. A sentinel value of `-1` is stored when
-    /// the Menubar window cannot be found, preventing repeated Window Server
-    /// IPC calls on every mouse-moved event when the window is temporarily
-    /// unavailable (e.g. during startup). The cache is cleared on display
-    /// configuration changes via `invalidateMenuBarHeightCache()`.
+    /// Results are cached per-display. When the Menubar window is not found
+    /// (e.g. during startup before the Window Server has populated the list),
+    /// no sentinel is cached — the function returns nil and schedules a
+    /// deferred retry. Once the retry succeeds, subsequent calls return the
+    /// cached height. The cache is also cleared on display configuration
+    /// changes via `invalidateMenuBarHeightCache()`.
     func getMenuBarHeight() -> CGFloat? {
         let id = displayID
-        if let cached = NSScreen.displayCache.withLock({ $0.menuBarHeights[id] }) {
-            let result = cached > 0 ? cached : nil
-            Self.diagLog.debug("getMenuBarHeight: display=\(id) returnedCached=\(Double(cached)) result=\(result ?? -1)")
-            // Negative sentinel means a previous lookup failed; don't retry
-            // until the cache is invalidated.
-            return result
+        if let cached = NSScreen.displayCache.withLock({ $0.menuBarHeights[id] }), cached > 0 {
+            Self.diagLog.debug("getMenuBarHeight: display=\(id) returnedCached=\(Double(cached))")
+            return cached
         }
         guard let menuBarWindow = WindowInfo.menuBarWindow(for: id) else {
-            NSScreen.displayCache.withLock { $0.menuBarHeights[id] = -1 }
-            Self.diagLog.warning("getMenuBarHeight: display=\(id) no menu bar window found, cached sentinel -1")
+            Self.diagLog.warning("getMenuBarHeight: display=\(id) no menu bar window found, scheduling retry")
+            NSScreen.scheduleMenuBarHeightRetry(for: id)
             return nil
         }
         let height = menuBarWindow.bounds.height
         guard height > 0 else {
-            NSScreen.displayCache.withLock { $0.menuBarHeights[id] = -1 }
-            Self.diagLog.warning("getMenuBarHeight: display=\(id) menu bar window has zero height, cached sentinel -1")
+            Self.diagLog.warning("getMenuBarHeight: display=\(id) menu bar window has zero height, scheduling retry")
+            NSScreen.scheduleMenuBarHeightRetry(for: id)
             return nil
         }
         NSScreen.displayCache.withLock { $0.menuBarHeights[id] = height }
@@ -717,7 +738,6 @@ extension NSScreen {
             Self.diagLog.debug("getMenuBarHeightEstimate: display=\(displayID) live=\(Double(live))")
             return live
         }
-        // Skip the sentinel (-1) stored for a failed lookup.
         let id = displayID
         if let cached = NSScreen.displayCache.withLock({ $0.menuBarHeights[id] }), cached > 0 {
             Self.diagLog.debug("getMenuBarHeightEstimate: display=\(id) cacheHit=\(Double(cached))")
@@ -726,7 +746,7 @@ extension NSScreen {
         // Notched MacBooks have a ~37-38 pt menu bar; non-notch Macs use the
         // standard status-bar thickness (22 pt).
         let fallback = hasNotch ? 37.0 : NSStatusBar.system.thickness
-        Self.diagLog.notice("getMenuBarHeightEstimate: display=\(id) FALLBACK hasNotch=\(hasNotch) fallback=\(Double(fallback))")
+        Self.diagLog.notice("getMenuBarHeightEstimate: display=\(displayID) FALLBACK hasNotch=\(hasNotch) fallback=\(Double(fallback))")
         return fallback
     }
 

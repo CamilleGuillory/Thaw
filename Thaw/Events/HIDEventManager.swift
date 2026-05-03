@@ -161,12 +161,15 @@ final class HIDEventManager: ObservableObject {
         }
         // Prefer the screen the mouse is physically on so clicks on the external
         // monitor's menu bar are processed against the correct display geometry.
-        // Fall back to the active-menu-bar screen when the mouse screen has no
-        // visible menu bar (e.g. a fullscreen app is suppressing it), which
-        // preserves the original guard against acting on inactive menu bars.
-        let mouseScreen = NSScreen.screenWithMouse ?? NSScreen.main
+        // Fall back to the active-menu-bar screen when the mouse screen cannot
+        // be determined.
+        // Note: getMenuBarHeight() is NOT used as a gate here because it may
+        // return nil transiently during startup (before the Window Server has
+        // populated the menu bar window list). The downstream hit-testing in
+        // isMouseInsideMenuBar() / isMouseInsideEmptyMenuBarSpace() handles the
+        // case where the menu bar is genuinely absent (fullscreen app, etc.).
         let screen: NSScreen
-        if let s = mouseScreen, s.getMenuBarHeight() != nil {
+        if let s = NSScreen.screenWithMouse ?? NSScreen.main {
             screen = s
         } else if let s = bestScreen(appState: appState) {
             screen = s
