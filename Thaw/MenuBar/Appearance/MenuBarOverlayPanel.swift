@@ -493,7 +493,7 @@ final class MenuBarOverlayPanel: NSPanel, @unchecked Sendable {
     private func updateWindowLevel() {
         guard let appState else { return }
         let config = appState.appearanceManager.configuration
-        if config.current.tintKind != .noTint || config.shapeKind != .noShape {
+        if config.current.tintKind != .noTint || config.shapeKind != .noShape || config.current.backgroundKind != .none {
             level = NSWindow.Level(rawValue: Int(CGWindowLevelForKey(.statusWindow)) - 1)
         } else {
             level = .statusBar
@@ -1033,10 +1033,7 @@ private final class MenuBarOverlayPanelContentView: NSView {
     private func drawTint(in rect: CGRect) {
         switch configuration.tintKind {
         case .noTint:
-            if fullConfiguration.shapeKind != .noShape {
-                NSColor.black.withAlphaComponent(0.2).setFill()
-                rect.fill()
-            }
+            break
         case .solid:
             if let tintColor = NSColor(cgColor: configuration.tintColor)?
                 .withAlphaComponent(configuration.tintOpacity)
@@ -1052,6 +1049,60 @@ private final class MenuBarOverlayPanelContentView: NSView {
                 tintGradient.draw(in: rect, angle: 0)
             }
         }
+    }
+
+    /// Draws the background surrounding the shape in the given rectangle.
+    private func drawBackground(in rect: CGRect) {
+        switch configuration.backgroundKind {
+        case .none:
+            break
+        case .solid:
+            if let color = NSColor(cgColor: configuration.backgroundColor)?
+                .withAlphaComponent(configuration.backgroundOpacity)
+            {
+                color.setFill()
+                rect.fill()
+            }
+        case .gradient:
+            if let gradient = configuration.backgroundGradient
+                .withAlpha(configuration.backgroundOpacity)
+                .nsGradient(using: .displayP3)
+            {
+                gradient.draw(in: rect, angle: 0)
+            }
+        }
+    }
+
+    /// Draws the background shadow at the top edge of the given rectangle.
+    private func drawBackgroundShadow(in rect: CGRect) {
+        guard configuration.backgroundHasShadow else { return }
+        guard let gradient = NSGradient(
+            colors: [
+                NSColor(white: 0.0, alpha: 0.0),
+                NSColor(white: 0.0, alpha: 0.2),
+            ]
+        ) else { return }
+        let shadowBounds = CGRect(
+            x: rect.minX,
+            y: rect.minY - 5,
+            width: rect.width,
+            height: 5
+        )
+        gradient.draw(in: shadowBounds, angle: 90)
+    }
+
+    /// Draws the background border at the top edge of the given rectangle.
+    private func drawBackgroundBorder(in rect: CGRect) {
+        guard configuration.backgroundHasBorder else { return }
+        guard let color = NSColor(cgColor: configuration.backgroundBorderColor) else { return }
+        let borderBounds = CGRect(
+            x: rect.minX,
+            y: rect.minY,
+            width: rect.width,
+            height: configuration.backgroundBorderWidth
+        )
+        color.setFill()
+        NSBezierPath(rect: borderBounds).fill()
     }
 
     override func draw(_: NSRect) {
@@ -1093,36 +1144,15 @@ private final class MenuBarOverlayPanelContentView: NSView {
 
         var hasBorder = false
 
+        // Background always draws first (full area, behind shapes)
+        drawBackground(in: drawableBounds)
+        drawBackgroundShadow(in: drawableBounds)
+        drawBackgroundBorder(in: drawableBounds)
+
         switch fullConfiguration.shapeKind {
         case .noShape:
-            if configuration.hasShadow {
-                let gradient = NSGradient(
-                    colors: [
-                        NSColor(white: 0.0, alpha: 0.0),
-                        NSColor(white: 0.0, alpha: 0.2),
-                    ]
-                )
-                let shadowBounds = CGRect(
-                    x: bounds.minX,
-                    y: bounds.minY,
-                    width: bounds.width,
-                    height: 5
-                )
-                gradient?.draw(in: shadowBounds, angle: 90)
-            }
-
-            drawTint(in: drawableBounds)
-
-            if configuration.hasBorder {
-                let borderBounds = CGRect(
-                    x: bounds.minX,
-                    y: bounds.minY + 5,
-                    width: bounds.width,
-                    height: configuration.borderWidth
-                )
-                NSColor(cgColor: configuration.borderColor)?.setFill()
-                NSBezierPath(rect: borderBounds).fill()
-            }
+            // No shape tint/shadow/border — background only
+            break
         case .full, .split, .notch:
             if configuration.hasShadow {
                 context.saveGraphicsState()
@@ -1165,9 +1195,6 @@ private final class MenuBarOverlayPanelContentView: NSView {
 
                 let borderPath = shapePath
 
-                // HACK: Insetting a path to get an "inside" stroke is surprisingly
-                // difficult. We can fake the correct line width by doubling it, as
-                // anything outside the shape path will be clipped.
                 borderPath.lineWidth = configuration.borderWidth * 2
                 borderPath.setClip()
 

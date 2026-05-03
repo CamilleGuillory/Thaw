@@ -120,3 +120,27 @@ extension MenuBarNotchShapeInfo {
 extension MenuBarNotchShapeInfo {
     static let defaultValue = MenuBarNotchShapeInfo(leading: .defaultValue, trailing: .defaultValue)
 }
+
+/// A type that specifies how the background surrounding the shape is rendered.
+enum MenuBarBackgroundKind: Int, CaseIterable, Codable, Hashable {
+    /// No background.
+    case none = 0
+    /// A solid color background.
+    case solid = 1
+    /// A gradient background.
+    case gradient = 2
+}
+
+extension MenuBarBackgroundKind {
+    var localized: LocalizedStringKey {
+        switch self {
+        case .none: "None"
+        case .solid: "Solid"
+        case .gradient: "Gradient"
+        }
+    }
+}
+
+extension MenuBarBackgroundKind {
+    static let `default` = MenuBarBackgroundKind.none
+}

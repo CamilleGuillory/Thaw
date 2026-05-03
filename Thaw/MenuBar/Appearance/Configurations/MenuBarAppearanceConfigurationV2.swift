@@ -125,6 +125,14 @@ struct MenuBarAppearancePartialConfiguration: Hashable {
     var tintColor: CGColor
     var tintGradient: IceGradient
     var tintOpacity: Double
+    var backgroundKind: MenuBarBackgroundKind
+    var backgroundColor: CGColor
+    var backgroundGradient: IceGradient
+    var backgroundOpacity: Double
+    var backgroundHasShadow: Bool
+    var backgroundHasBorder: Bool
+    var backgroundBorderColor: CGColor
+    var backgroundBorderWidth: Double
 }
 
 // MARK: Default Partial Configuration
@@ -135,10 +143,18 @@ extension MenuBarAppearancePartialConfiguration {
         hasBorder: false,
         borderColor: .black,
         borderWidth: 1,
-        tintKind: .noTint,
+        tintKind: .solid,
         tintColor: .black,
         tintGradient: .defaultMenuBarTint,
-        tintOpacity: 0.2
+        tintOpacity: 0.2,
+        backgroundKind: .default,
+        backgroundColor: .black,
+        backgroundGradient: .defaultMenuBarTint,
+        backgroundOpacity: 0.2,
+        backgroundHasShadow: false,
+        backgroundHasBorder: false,
+        backgroundBorderColor: .black,
+        backgroundBorderWidth: 1
     )
 }
 
@@ -157,6 +173,14 @@ extension MenuBarAppearancePartialConfiguration: Codable {
         case tintColor
         case tintGradient
         case tintOpacity
+        case backgroundKind
+        case backgroundColor
+        case backgroundGradient
+        case backgroundOpacity
+        case backgroundHasShadow
+        case backgroundHasBorder
+        case backgroundBorderColor
+        case backgroundBorderWidth
     }
 
     init(from decoder: Decoder) throws {
@@ -169,7 +193,15 @@ extension MenuBarAppearancePartialConfiguration: Codable {
             tintKind: container.decodeIfPresent(MenuBarTintKind.self, forKey: .tintKind) ?? Self.defaultConfiguration.tintKind,
             tintColor: container.decodeIfPresent(IceColor.self, forKey: .tintColor)?.cgColor ?? Self.defaultConfiguration.tintColor,
             tintGradient: container.decodeIfPresent(IceGradient.self, forKey: .tintGradient) ?? Self.defaultConfiguration.tintGradient,
-            tintOpacity: container.decodeIfPresent(Double.self, forKey: .tintOpacity) ?? Self.defaultConfiguration.tintOpacity
+            tintOpacity: container.decodeIfPresent(Double.self, forKey: .tintOpacity) ?? Self.defaultConfiguration.tintOpacity,
+            backgroundKind: container.decodeIfPresent(MenuBarBackgroundKind.self, forKey: .backgroundKind) ?? Self.defaultConfiguration.backgroundKind,
+            backgroundColor: container.decodeIfPresent(IceColor.self, forKey: .backgroundColor)?.cgColor ?? Self.defaultConfiguration.backgroundColor,
+            backgroundGradient: container.decodeIfPresent(IceGradient.self, forKey: .backgroundGradient) ?? Self.defaultConfiguration.backgroundGradient,
+            backgroundOpacity: container.decodeIfPresent(Double.self, forKey: .backgroundOpacity) ?? Self.defaultConfiguration.backgroundOpacity,
+            backgroundHasShadow: container.decodeIfPresent(Bool.self, forKey: .backgroundHasShadow) ?? Self.defaultConfiguration.backgroundHasShadow,
+            backgroundHasBorder: container.decodeIfPresent(Bool.self, forKey: .backgroundHasBorder) ?? Self.defaultConfiguration.backgroundHasBorder,
+            backgroundBorderColor: container.decodeIfPresent(IceColor.self, forKey: .backgroundBorderColor)?.cgColor ?? Self.defaultConfiguration.backgroundBorderColor,
+            backgroundBorderWidth: container.decodeIfPresent(Double.self, forKey: .backgroundBorderWidth) ?? Self.defaultConfiguration.backgroundBorderWidth
         )
     }
 
@@ -183,5 +215,13 @@ extension MenuBarAppearancePartialConfiguration: Codable {
         try container.encode(IceColor(cgColor: tintColor), forKey: .tintColor)
         try container.encode(tintGradient, forKey: .tintGradient)
         try container.encode(tintOpacity, forKey: .tintOpacity)
+        try container.encode(backgroundKind, forKey: .backgroundKind)
+        try container.encode(IceColor(cgColor: backgroundColor), forKey: .backgroundColor)
+        try container.encode(backgroundGradient, forKey: .backgroundGradient)
+        try container.encode(backgroundOpacity, forKey: .backgroundOpacity)
+        try container.encode(backgroundHasShadow, forKey: .backgroundHasShadow)
+        try container.encode(backgroundHasBorder, forKey: .backgroundHasBorder)
+        try container.encode(IceColor(cgColor: backgroundBorderColor), forKey: .backgroundBorderColor)
+        try container.encode(backgroundBorderWidth, forKey: .backgroundBorderWidth)
     }
 }

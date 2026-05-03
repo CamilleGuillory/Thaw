@@ -297,7 +297,15 @@ extension MigrationManager {
                     tintKind: oldConfiguration.tintKind,
                     tintColor: oldConfiguration.tintColor,
                     tintGradient: oldConfiguration.tintGradient,
-                    tintOpacity: MenuBarAppearancePartialConfiguration.defaultConfiguration.tintOpacity
+                    tintOpacity: MenuBarAppearancePartialConfiguration.defaultConfiguration.tintOpacity,
+                    backgroundKind: MenuBarAppearancePartialConfiguration.defaultConfiguration.backgroundKind,
+                    backgroundColor: MenuBarAppearancePartialConfiguration.defaultConfiguration.backgroundColor,
+                    backgroundGradient: MenuBarAppearancePartialConfiguration.defaultConfiguration.backgroundGradient,
+                    backgroundOpacity: MenuBarAppearancePartialConfiguration.defaultConfiguration.backgroundOpacity,
+                    backgroundHasShadow: MenuBarAppearancePartialConfiguration.defaultConfiguration.backgroundHasShadow,
+                    backgroundHasBorder: MenuBarAppearancePartialConfiguration.defaultConfiguration.backgroundHasBorder,
+                    backgroundBorderColor: MenuBarAppearancePartialConfiguration.defaultConfiguration.backgroundBorderColor,
+                    backgroundBorderWidth: MenuBarAppearancePartialConfiguration.defaultConfiguration.backgroundBorderWidth
                 )
                 configuration.lightModeConfiguration = partialConfiguration
                 configuration.darkModeConfiguration = partialConfiguration

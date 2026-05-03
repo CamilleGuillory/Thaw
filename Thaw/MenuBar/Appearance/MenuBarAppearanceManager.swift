@@ -114,6 +114,7 @@ final class MenuBarAppearanceManager: ObservableObject {
                         || preview.hasBorder
                         || configuration.shapeKind != .noShape
                         || preview.tintKind != .noTint
+                        || preview.backgroundKind != .none
                     if overlayPanels.isEmpty, needsPanels {
                         configureOverlayPanels(with: configuration, force: true)
                     }
@@ -144,6 +145,9 @@ final class MenuBarAppearanceManager: ObservableObject {
             return true
         }
         if current.tintKind != .noTint {
+            return true
+        }
+        if configuration.current.backgroundKind != .none {
             return true
         }
         return false
