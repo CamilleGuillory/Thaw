@@ -463,7 +463,7 @@ final class MenuBarItemImageCache: ObservableObject, @unchecked Sendable {
     /// Starts or stops the live image refresh loop based on navigation state.
     @MainActor
     private func startLiveRefreshIfNeeded() {
-        guard let appState else {
+        guard appState != nil else {
             liveRefreshTask?.cancel()
             liveRefreshTask = nil
             return
@@ -471,8 +471,8 @@ final class MenuBarItemImageCache: ObservableObject, @unchecked Sendable {
 
         // Compute visibility using centralized snapshot and helper to avoid duplication.
         // Wrapping in Task since this is called from synchronous sink closures on main thread.
-        Task { [weak self, weak appState] in
-            guard let self, let appState else { return }
+        Task { [weak self] in
+            guard let self else { return }
             let nav = await MainActor.run {
                 self.makeNavigationStateSnapshot()
             }
@@ -484,9 +484,9 @@ final class MenuBarItemImageCache: ObservableObject, @unchecked Sendable {
                 MenuBarItemImageCache.diagLog.debug(
                     "Starting live refresh (iceBar=\(nav.isIceBarPresented), search=\(nav.isSearchPresented), settings=\(nav.isSettingsPresented))"
                 )
-                self.liveRefreshTask = Task { [weak self, weak appState] in
-                    guard let self, let appState else { return }
-                    await self.runLiveRefreshLoop(appState: appState)
+                self.liveRefreshTask = Task { [weak self] in
+                    guard let self else { return }
+                    await self.runLiveRefreshLoop()
                 }
             } else {
                 if self.liveRefreshTask != nil {
@@ -504,11 +504,14 @@ final class MenuBarItemImageCache: ObservableObject, @unchecked Sendable {
     /// Search, Layout Settings) instead of each view running its own loop.
     /// Heavy work (`refreshImages`) is `nonisolated` and runs off the main
     /// actor — only navigation state reads happen on `@MainActor`.
+    /// Uses `self.appState` (weak property) to avoid retain cycle via
+    /// the task's async stack frame.
     @MainActor
-    private func runLiveRefreshLoop(appState: AppState) async {
+    private func runLiveRefreshLoop() async {
         MenuBarItemImageCache.diagLog.debug("Live refresh loop started")
 
         while !Task.isCancelled {
+            guard let appState = self.appState else { break }
             let interval = appState.settings.advanced.iconRefreshInterval
             guard interval > 0 else {
                 try? await Task.sleep(for: .seconds(1))
@@ -1282,14 +1285,31 @@ final class MenuBarItemImageCache: ObservableObject, @unchecked Sendable {
                 accessTimestamps[tag] = accessCounter
             }
 
+            // Remove old entries whose (namespace, title, instanceIndex) matches a
+            // new entry but with a different windowID. After a monitor reconnect,
+            // items may get new windowIDs, causing duplicate cache entries for the
+            // same logical item. Keep only the latest capture (newImages wins).
+            let newKeysSet = Set(newImages.keys)
+            let staleKeys = images.keys.filter { oldKey in
+                guard !oldKey.isSystemItem, !newKeysSet.contains(oldKey) else {
+                    return false
+                }
+                return newKeysSet.contains(where: { $0.matchesIgnoringWindowID(oldKey) })
+            }
+            for tag in staleKeys {
+                images.removeValue(forKey: tag)
+                accessTimestamps.removeValue(forKey: tag)
+            }
+
             // Merge in the new images
             images.merge(newImages) { _, new in new }
 
             // Enforce cache size limit using LRU eviction, but never evict
-            // items that belong to the sections we just captured (i.e. the
-            // sections currently being displayed).
+            // items that still exist in the menu bar (valid item tags).
+            // This prevents thrashing the cache for visible items when
+            // many transient items come and go (e.g. monitor hotplug).
             if images.count > Self.maxCacheSize {
-                let protectedTags = Set(newImages.keys)
+                let protectedTags = allValidTags
                 let excessCount = images.count - Self.maxCacheSize
                 let tagsToRemove = leastRecentlyUsedTags(
                     count: excessCount,

@@ -336,13 +336,27 @@ final class AppState: ObservableObject {
                 guard let self else { return }
                 defer { self.lastKnownScreenCount = count }
                 if count < self.lastKnownScreenCount {
-                    self.diagLog.info("Detected display disconnect; state will be refreshed automatically")
-                    // App restart disabled - memory leak fixes allow dynamic display handling
-                    // self.restartSelf()
+                    self.diagLog.info("Display disconnected: refresh item cache + cleanup image cache")
+                    Task { @MainActor [weak self] in
+                        guard let self else { return }
+                        // Force item cache rebuild so displayID reflects current
+                        // display geometry (items moved to remaining display).
+                        await self.itemManager.cacheItemsRegardless(skipRecentMoveCheck: true)
+                        // Force image cache: remove entries for items no longer
+                        // present, trigger re-capture for current display.
+                        self.imageCache.performCacheCleanup()
+                        await self.imageCache.updateCacheWithoutChecks(sections: MenuBarSection.Name.allCases)
+                        self.diagLog.info("Cache refresh complete after display disconnect")
+                    }
                 } else if count > self.lastKnownScreenCount {
-                    self.diagLog.info("Detected display connect; state will be refreshed automatically")
-                    // App restart disabled - memory leak fixes allow dynamic display handling
-                    // self.restartSelf()
+                    self.diagLog.info("Display connected: refresh item cache")
+                    Task { @MainActor [weak self] in
+                        guard let self else { return }
+                        // Items keep their windowIDs when moving to new display.
+                        // Item cache rebuild picks up new items on the added display.
+                        await self.itemManager.cacheItemsRegardless(skipRecentMoveCheck: true)
+                        self.diagLog.info("Item cache refreshed after display connect")
+                    }
                 }
             }
             .store(in: &c)
