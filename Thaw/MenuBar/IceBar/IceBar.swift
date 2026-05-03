@@ -154,6 +154,26 @@ final class IceBarPanel: NSPanel {
                 }
 
                 return CGPoint(x: (itemBounds.midX - frame.width / 2).clamped(to: lowerBound ... upperBound), y: defaultOriginY)
+            case .leftAligned:
+                let lowerBound = screen.frame.minX
+                let upperBound = screen.frame.maxX - frame.width
+
+                guard lowerBound <= upperBound else {
+                    return originForRightOfScreen
+                }
+
+                let x = (screen.frame.minX + 24).clamped(to: lowerBound ... upperBound)
+                return CGPoint(x: x, y: defaultOriginY)
+            case .rightAligned:
+                let lowerBound = screen.frame.minX
+                let upperBound = screen.frame.maxX - frame.width
+
+                guard lowerBound <= upperBound else {
+                    return originForRightOfScreen
+                }
+
+                let x = (screen.frame.maxX - frame.width - 24).clamped(to: lowerBound ... upperBound)
+                return CGPoint(x: x, y: defaultOriginY)
             }
         }
 

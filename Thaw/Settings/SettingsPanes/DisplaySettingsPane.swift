@@ -112,6 +112,10 @@ struct DisplaySettingsPane: View {
                     Text("The \(Constants.displayName) Bar is centered below the mouse pointer.")
                 case .iceIcon:
                     Text("The \(Constants.displayName) Bar is centered below the \(Constants.displayName) icon.")
+                case .leftAligned:
+                    Text("The \(Constants.displayName) Bar is aligned to the left edge of the display.")
+                case .rightAligned:
+                    Text("The \(Constants.displayName) Bar is aligned to the right edge of the display.")
                 }
             }
 

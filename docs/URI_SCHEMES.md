@@ -169,7 +169,7 @@ These settings affect specific displays based on context:
 | Key                      | Type | Scope | Description |
 | ------------------------ | ---- | ----- | ----------- |
 | `useIceBar`              | Bool | Active display only | Enable/disable Thaw Bar on the display with the active menu bar |
-| `iceBarLocation`         | String | All displays with IceBar enabled | Thaw Bar position: `dynamic`, `mousePointer`, or `iceIcon` |
+| `iceBarLocation`         | String | All displays with IceBar enabled | Thaw Bar position: `dynamic`, `mousePointer`, `iceIcon`, `leftAligned`, or `rightAligned` |
 | `alwaysShowHiddenItems`  | Bool | All displays without IceBar | Show hidden items inline when IceBar is disabled |
 | `iceBarLayout`           | String | All displays with IceBar enabled | Thaw Bar layout: `horizontal`, `vertical`, or `grid` |
 | `gridColumns`            | Int | All displays with IceBar enabled | Maximum items per row in grid layout (2–10) |
@@ -227,6 +227,12 @@ open "thaw://toggle?key=hideApplicationMenus"
 
 # Set IceBar location (all displays with IceBar enabled)
 open "thaw://set?key=iceBarLocation&value=mousePointer"
+
+# Set IceBar aligned left (all displays with IceBar enabled)
+open "thaw://set?key=iceBarLocation&value=leftAligned"
+
+# Set IceBar aligned right (all displays with IceBar enabled)
+open "thaw://set?key=iceBarLocation&value=rightAligned"
 
 # Enable always-show-hidden-items (all displays without IceBar)
 open "thaw://set?key=alwaysShowHiddenItems&value=true"

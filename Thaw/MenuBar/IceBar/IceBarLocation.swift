@@ -19,6 +19,12 @@ enum IceBarLocation: Int, CaseIterable, Codable, Identifiable {
     /// The Thaw Bar will appear centered below the Ice icon.
     case iceIcon = 2
 
+    /// The Thaw Bar will appear aligned to the left edge of the display.
+    case leftAligned = 3
+
+    /// The Thaw Bar will appear aligned to the right edge of the display.
+    case rightAligned = 4
+
     var id: Int {
         rawValue
     }
@@ -29,6 +35,8 @@ enum IceBarLocation: Int, CaseIterable, Codable, Identifiable {
         case .dynamic: "Dynamic"
         case .mousePointer: "Mouse pointer"
         case .iceIcon: "\(Constants.displayName) icon"
+        case .leftAligned: "Left aligned"
+        case .rightAligned: "Right aligned"
         }
     }
 
@@ -43,6 +51,10 @@ enum IceBarLocation: Int, CaseIterable, Codable, Identifiable {
             return .mousePointer
         case "iceIcon", "2":
             return .iceIcon
+        case "leftAligned", "3":
+            return .leftAligned
+        case "rightAligned", "4":
+            return .rightAligned
         default:
             return nil
         }

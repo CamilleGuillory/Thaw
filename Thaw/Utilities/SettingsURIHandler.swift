@@ -449,7 +449,7 @@ enum SettingsURIHandler {
         case "iceBarLocation":
             // Parse IceBarLocation from string value
             guard let location = IceBarLocation.fromString(value) else {
-                diagLog.warning("Settings URI: Invalid iceBarLocation value '\(value)'. Valid: dynamic, mousePointer, iceIcon (or 0, 1, 2)")
+                diagLog.warning("Settings URI: Invalid iceBarLocation value '\(value)'. Valid: dynamic, mousePointer, iceIcon, leftAligned, rightAligned (or 0-4)")
                 return false
             }
             // Post notification for DisplaySettingsManager to handle all enabled displays
@@ -520,7 +520,7 @@ enum SettingsURIHandler {
         case "iceBarLocation":
             // Parse IceBarLocation from string value
             guard let location = IceBarLocation.fromString(value) else {
-                diagLog.warning("Settings URI: Invalid iceBarLocation value '\(value)'. Valid: dynamic, mousePointer, iceIcon (or 0, 1, 2)")
+                diagLog.warning("Settings URI: Invalid iceBarLocation value '\(value)'. Valid: dynamic, mousePointer, iceIcon, leftAligned, rightAligned (or 0-4)")
                 return false
             }
             // Post notification for specific display
