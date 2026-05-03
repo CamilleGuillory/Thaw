@@ -11,6 +11,7 @@ on:
         required: true
         type: string
       dry_run:
+        description: "Build, sign, and notarize but upload as artifact instead of creating a GitHub release"
         type: boolean
         default: true
 
@@ -18,7 +19,7 @@ jobs:
   release:
     runs-on: macos-26
     permissions:
-      contents: read
+      contents: write
     env:
       PROJECT_NAME: "Thaw.xcodeproj"
       SCHEME_NAME: "Thaw"
@@ -43,10 +44,12 @@ jobs:
           fi
 
       - name: Configure signing
-        if: ${{ !inputs.dry_run }}
         env:
           APPLE_APPLICATION_CERT: ${{ secrets.APPLE_APPLICATION_CERT }}
           APPLE_APPLICATION_CERT_PASSWORD: ${{ secrets.APPLE_APPLICATION_CERT_PASSWORD }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_ID_PASSWORD: ${{ secrets.APPLE_ID_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
         run: |
           keychain="$RUNNER_TEMP/buildagent.keychain"
           keychain_password="$(openssl rand -base64 32)"
@@ -60,23 +63,13 @@ jobs:
           security set-key-partition-list -S "apple-tool:,apple:,codesign:" \
             -s -k "$keychain_password" "$keychain"
           rm "$RUNNER_TEMP/cert.p12"
-
-      - name: Build (dry run)
-        if: ${{ inputs.dry_run }}
-        run: |
-          xcodebuild archive \
-            -project "${{ env.PROJECT_NAME }}" \
-            -scheme "${{ env.SCHEME_NAME }}" \
-            -destination platform=macOS \
-            -configuration Release \
-            -archivePath build/Archive.xcarchive \
-            MACOSX_DEPLOYMENT_TARGET=${{ env.MACOSX_DEPLOYMENT_TARGET }} \
-            CODE_SIGN_IDENTITY="" \
-            CODE_SIGNING_REQUIRED=NO \
-            CODE_SIGNING_ALLOWED=NO
+          xcrun notarytool store-credentials "notarytool-profile" \
+            --apple-id "$APPLE_ID" \
+            --password "$APPLE_ID_PASSWORD" \
+            --team-id "$APPLE_TEAM_ID" \
+            --keychain "$keychain"
 
       - name: Build
-        if: ${{ !inputs.dry_run }}
         run: |
           xcodebuild archive \
             -project "${{ env.PROJECT_NAME }}" \
@@ -86,52 +79,57 @@ jobs:
             -archivePath build/Archive.xcarchive \
             MACOSX_DEPLOYMENT_TARGET=${{ env.MACOSX_DEPLOYMENT_TARGET }} \
             DEVELOPMENT_TEAM=${{ secrets.APPLE_TEAM_ID }} \
+            CODE_SIGN_STYLE=Manual \
             CODE_SIGN_IDENTITY="Developer ID Application"
 
       - name: Export Archive
-        if: ${{ !inputs.dry_run }}
         env:
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
         run: |
+          export_plist="$RUNNER_TEMP/ExportOptions.plist"
+          rm -f "$export_plist"
           /usr/libexec/PlistBuddy \
             -c "Add :method string developer-id" \
             -c "Add :teamID string $APPLE_TEAM_ID" \
-            -c "Add :signingStyle string automatic" \
+            -c "Add :signingStyle string manual" \
             -c "Add :destination string export" \
-            /tmp/ExportOptions.plist
+            "$export_plist"
 
           xcodebuild -exportArchive \
             -archivePath build/Archive.xcarchive \
             -exportPath build/Export \
-            -exportOptionsPlist /tmp/ExportOptions.plist
+            -exportOptionsPlist "$export_plist"
 
-          mkdir -p /tmp/dmg-staging
-          cp -r "build/Export/${{ env.APP_NAME }}" /tmp/dmg-staging/
-          ln -s /Applications /tmp/dmg-staging/Applications
+          dmg_staging="$RUNNER_TEMP/dmg-staging"
+          mkdir -p "$dmg_staging"
+          cp -r "build/Export/${{ env.APP_NAME }}" "$dmg_staging/"
+          ln -s /Applications "$dmg_staging/Applications"
           hdiutil create \
             -volname "Thaw" \
-            -srcfolder /tmp/dmg-staging \
+            -srcfolder "$dmg_staging" \
             -ov -format UDZO \
             "build/${{ env.DMG_NAME }}"
 
       - name: Notarize
-        if: ${{ !inputs.dry_run }}
-        env:
-          APPLE_ID: ${{ secrets.APPLE_ID }}
-          APPLE_ID_PASSWORD: ${{ secrets.APPLE_ID_PASSWORD }}
-          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
         run: |
           xcrun notarytool submit "build/${{ env.DMG_NAME }}" \
-            --apple-id "$APPLE_ID" \
-            --password "$APPLE_ID_PASSWORD" \
-            --team-id "$APPLE_TEAM_ID" \
+            --keychain-profile "notarytool-profile" \
+            --keychain "$RUNNER_TEMP/buildagent.keychain" \
             --wait
 
           xcrun stapler staple "build/${{ env.DMG_NAME }}"
           xcrun stapler validate "build/${{ env.DMG_NAME }}"
 
+      - name: Upload notarized DMG
+        if: ${{ inputs.dry_run }}
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: Thaw-notarized-dmg
+          path: build/${{ env.DMG_NAME }}
+          retention-days: 3
+
       - name: Create GitHub Release
-        if: ${{ !inputs.dry_run }}
+        if: ${{ !inputs.dry_run || github.event_name == 'push' }}
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ inputs.tag || github.ref_name }}
@@ -140,3 +138,7 @@ jobs:
           draft: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Cleanup keychain
+        if: always()
+        run: security delete-keychain "$RUNNER_TEMP/buildagent.keychain" || true
