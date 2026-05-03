@@ -146,16 +146,6 @@ final class MenuBarOverlayPanel: NSPanel, @unchecked Sendable {
             defer: false
         )
 
-        /*
-         Idealy we would move it down one level, so the icons and app menu text is not tinted.
-         But that for some reason this fails to draw the OverlayPanel on startup at the correct
-         level entirely. so we Draw it at statusBar level for now.
-
-         self.level = appState.appearanceManager.configuration.showsMenuBarBackground
-             ? NSWindow.Level(rawValue: Int(CGWindowLevelForKey(.statusWindow)) - 1)
-             : .statusBar
-          */
-
         self.level = .statusBar
         self.title = String(localized: "Menu Bar Overlay")
         self.backgroundColor = .clear
@@ -946,16 +936,13 @@ private final class MenuBarOverlayPanelContentView: NSView {
     }
 
     /// Draws the tint defined by the given configuration in the given rectangle.
-    ///
-    /// When the panel sits behind the menu bar (`statusWindow - 1`), the menu bar's
-    /// own visual-effect layer blends the tint naturally. When at `.statusBar` level
-    /// (`.noTint` with shape/border/shadow), the semi-transparent black provides a
-    /// subtle darkening.
     private func drawTint(in rect: CGRect) {
         switch configuration.tintKind {
         case .noTint:
-            NSColor.black.withAlphaComponent(0.2).setFill()
-            rect.fill()
+            if fullConfiguration.shapeKind != .noShape {
+                NSColor.black.withAlphaComponent(0.2).setFill()
+                rect.fill()
+            }
         case .solid:
             if let tintColor = NSColor(cgColor: configuration.tintColor)?
                 .withAlphaComponent(configuration.tintOpacity)

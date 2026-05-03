@@ -87,6 +87,12 @@ struct MenuBarAppearanceEditor: View {
                 shapePicker
                 isInset
             }
+            if appearanceManager.configuration.current.tintKind != .noTint || appearanceManager.configuration.shapeKind != .noShape {
+                CalloutBox(
+                    "If effects are not visible, disable \"Show menu bar background\" in System Settings \(Constants.menuArrow) Menu Bar",
+                    systemImage: "info.circle"
+                )
+            }
         }
     }
 

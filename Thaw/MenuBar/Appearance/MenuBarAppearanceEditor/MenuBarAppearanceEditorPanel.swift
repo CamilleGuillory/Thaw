@@ -184,7 +184,16 @@ private final class MenuBarAppearanceEditorHostingController: NSHostingControlle
         let baseHeight: CGFloat = configuration.isDynamic ? 675 : 455
         let shapeBonus: CGFloat = configuration.shapeKind == .noShape ? 0 : 105
         let headingBonus: CGFloat = 32
-        preferredContentSize = NSSize(width: 500, height: baseHeight + shapeBonus + headingBonus)
+        let calloutBonus: CGFloat = {
+            let current = configuration.current
+            guard current.tintKind != .noTint || configuration.shapeKind != .noShape else { return 0 }
+            return 80
+        }()
+        let tintOpacityBonus: CGFloat = {
+            guard !configuration.isDynamic, configuration.current.tintKind != .noTint else { return 0 }
+            return 40
+        }()
+        preferredContentSize = NSSize(width: 500, height: baseHeight + shapeBonus + headingBonus + calloutBonus + tintOpacityBonus)
         view.setFrameSize(preferredContentSize)
     }
 }
