@@ -516,23 +516,6 @@ private final class MenuBarOverlayPanelContentView: NSView {
 
     private var cancellables = Set<AnyCancellable>()
 
-    private lazy var backgroundGlassView: NSGlassEffectView = {
-        let view = NSGlassEffectView()
-        view.style = .regular
-        view.cornerRadius = 0
-        view.translatesAutoresizingMaskIntoConstraints = false
-        let content = NSView()
-        content.translatesAutoresizingMaskIntoConstraints = false
-        view.contentView = content
-        NSLayoutConstraint.activate([
-            content.topAnchor.constraint(equalTo: view.topAnchor),
-            content.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-            content.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            content.bottomAnchor.constraint(equalTo: view.bottomAnchor),
-        ])
-        return view
-    }()
-
     private lazy var tintGlassView: NSGlassEffectView = {
         let view = NSGlassEffectView()
         view.style = .regular
@@ -1095,22 +1078,26 @@ private final class MenuBarOverlayPanelContentView: NSView {
         }
     }
 
-    /// Adds or removes the glass effect subview based on the current background kind.
+    /// Adds or removes the glass container on the panel based on background kind.
     private func updateBackgroundGlass() {
+        guard let panel = window as? MenuBarOverlayPanel else { return }
         if configuration.backgroundKind == .glass {
-            if backgroundGlassView.superview == nil {
-                addSubview(backgroundGlassView, positioned: .below, relativeTo: nil)
-                NSLayoutConstraint.activate([
-                    backgroundGlassView.topAnchor.constraint(equalTo: topAnchor),
-                    backgroundGlassView.leadingAnchor.constraint(equalTo: leadingAnchor),
-                    backgroundGlassView.trailingAnchor.constraint(equalTo: trailingAnchor),
-                    backgroundGlassView.bottomAnchor.constraint(equalTo: bottomAnchor, constant: -5),
-                ])
-            }
-            backgroundGlassView.isHidden = false
-            backgroundGlassView.style = configuration.backgroundGlassStyle.nsGlassStyle
-        } else if backgroundGlassView.superview != nil {
-            backgroundGlassView.isHidden = true
+            guard !(panel.contentView is NSGlassEffectView) else { return }
+            let realContent = panel.contentView!
+            let glassView = NSGlassEffectView()
+            glassView.style = configuration.backgroundGlassStyle.nsGlassStyle
+            glassView.cornerRadius = 0
+            glassView.contentView = realContent
+            realContent.translatesAutoresizingMaskIntoConstraints = false
+            panel.contentView = glassView
+            NSLayoutConstraint.activate([
+                realContent.topAnchor.constraint(equalTo: glassView.topAnchor),
+                realContent.leadingAnchor.constraint(equalTo: glassView.leadingAnchor),
+                realContent.trailingAnchor.constraint(equalTo: glassView.trailingAnchor),
+                realContent.bottomAnchor.constraint(equalTo: glassView.bottomAnchor),
+            ])
+        } else if let glassView = panel.contentView as? NSGlassEffectView {
+            panel.contentView = glassView.contentView
         }
     }
 
