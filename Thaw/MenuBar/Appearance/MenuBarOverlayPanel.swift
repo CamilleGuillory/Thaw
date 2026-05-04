@@ -1206,7 +1206,7 @@ private final class MenuBarOverlayPanelContentView: NSView {
 
     /// Draws the background shadow at the top edge of the given rectangle.
     private func drawBackgroundShadow(in rect: CGRect) {
-        guard configuration.backgroundHasShadow, configuration.backgroundKind != .glass else { return }
+        guard configuration.backgroundHasShadow else { return }
         guard let gradient = NSGradient(
             colors: [
                 NSColor(white: 0.0, alpha: 0.0),
@@ -1224,7 +1224,7 @@ private final class MenuBarOverlayPanelContentView: NSView {
 
     /// Draws the background border at the top edge of the given rectangle.
     private func drawBackgroundBorder(in rect: CGRect) {
-        guard configuration.backgroundHasBorder, configuration.backgroundKind != .glass else { return }
+        guard configuration.backgroundHasBorder else { return }
         guard let color = NSColor(cgColor: configuration.backgroundBorderColor) else { return }
         let borderBounds = CGRect(
             x: rect.minX,

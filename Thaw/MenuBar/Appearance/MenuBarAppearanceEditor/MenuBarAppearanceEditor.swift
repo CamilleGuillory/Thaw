@@ -183,9 +183,7 @@ private struct UnlabeledBackgroundEditor: View {
         if configuration.backgroundKind != .none, configuration.backgroundKind != .glass {
             backgroundOpacity
         }
-        if configuration.backgroundKind != .glass {
-            backgroundShadowToggle
-        }
+        backgroundShadowToggle
         if configuration.backgroundKind == .glass {
             LabeledContent("Glass") {
                 IcePicker("Glass Style", selection: $configuration.backgroundGlassStyle) {
@@ -209,13 +207,11 @@ private struct UnlabeledBackgroundEditor: View {
                     styleSection
                 }
             }
-            if configuration.backgroundKind != .glass {
-                IceSection {
-                    backgroundBorderToggle
-                    if configuration.backgroundHasBorder {
-                        backgroundBorderColor
-                        backgroundBorderWidth
-                    }
+            IceSection {
+                backgroundBorderToggle
+                if configuration.backgroundHasBorder {
+                    backgroundBorderColor
+                    backgroundBorderWidth
                 }
             }
         }
