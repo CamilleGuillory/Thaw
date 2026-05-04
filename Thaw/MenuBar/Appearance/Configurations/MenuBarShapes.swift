@@ -129,6 +129,8 @@ enum MenuBarBackgroundKind: Int, CaseIterable, Codable, Hashable {
     case solid = 1
     /// A gradient background.
     case gradient = 2
+    /// A glass-material background.
+    case glass = 3
 }
 
 extension MenuBarBackgroundKind {
@@ -137,6 +139,7 @@ extension MenuBarBackgroundKind {
         case .none: "None"
         case .solid: "Solid"
         case .gradient: "Gradient"
+        case .glass: "Glass"
         }
     }
 }

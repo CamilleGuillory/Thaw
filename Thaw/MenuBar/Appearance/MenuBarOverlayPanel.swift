@@ -516,6 +516,49 @@ private final class MenuBarOverlayPanelContentView: NSView {
 
     private var cancellables = Set<AnyCancellable>()
 
+    private lazy var backgroundGlassView: NSGlassEffectView = {
+        let view = NSGlassEffectView()
+        view.style = .regular
+        view.cornerRadius = 0
+        view.translatesAutoresizingMaskIntoConstraints = false
+        let content = NSView()
+        content.translatesAutoresizingMaskIntoConstraints = false
+        view.contentView = content
+        NSLayoutConstraint.activate([
+            content.topAnchor.constraint(equalTo: view.topAnchor),
+            content.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            content.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            content.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+        ])
+        return view
+    }()
+
+    private lazy var tintGlassView: NSGlassEffectView = {
+        let view = NSGlassEffectView()
+        view.style = .regular
+        view.cornerRadius = 0
+        view.translatesAutoresizingMaskIntoConstraints = false
+        view.wantsLayer = true
+        let content = NSView()
+        content.translatesAutoresizingMaskIntoConstraints = false
+        view.contentView = content
+        NSLayoutConstraint.activate([
+            content.topAnchor.constraint(equalTo: view.topAnchor),
+            content.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            content.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            content.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+        ])
+        return view
+    }()
+
+    private lazy var tintGlassMaskLayer: CAShapeLayer = {
+        let layer = CAShapeLayer()
+        layer.fillRule = .evenOdd
+        return layer
+    }()
+
+    private var shapeCGPath: CGPath?
+
     /// Cached menu bar item windows, updated by publishers instead of
     /// being queried synchronously during each `draw(_:)` call.
     private var cachedItemWindows: [WindowInfo] = []
@@ -622,6 +665,7 @@ private final class MenuBarOverlayPanelContentView: NSView {
         $fullConfiguration.replace(with: ())
             .merge(with: $previewConfiguration.replace(with: ()))
             .sink { [weak self] _ in
+                self?.updateBackgroundGlass()
                 self?.needsDisplay = true
             }
             .store(in: &c)
@@ -1032,7 +1076,7 @@ private final class MenuBarOverlayPanelContentView: NSView {
     /// Draws the tint defined by the given configuration in the given rectangle.
     private func drawTint(in rect: CGRect) {
         switch configuration.tintKind {
-        case .noTint:
+        case .noTint, .glass:
             break
         case .solid:
             if let tintColor = NSColor(cgColor: configuration.tintColor)?
@@ -1048,6 +1092,44 @@ private final class MenuBarOverlayPanelContentView: NSView {
             {
                 tintGradient.draw(in: rect, angle: 0)
             }
+        }
+    }
+
+    /// Adds or removes the glass effect subview based on the current background kind.
+    private func updateBackgroundGlass() {
+        if configuration.backgroundKind == .glass {
+            if backgroundGlassView.superview == nil {
+                addSubview(backgroundGlassView, positioned: .below, relativeTo: nil)
+                NSLayoutConstraint.activate([
+                    backgroundGlassView.topAnchor.constraint(equalTo: topAnchor),
+                    backgroundGlassView.leadingAnchor.constraint(equalTo: leadingAnchor),
+                    backgroundGlassView.trailingAnchor.constraint(equalTo: trailingAnchor),
+                    backgroundGlassView.bottomAnchor.constraint(equalTo: bottomAnchor, constant: -5),
+                ])
+            }
+            backgroundGlassView.isHidden = false
+        } else if backgroundGlassView.superview != nil {
+            backgroundGlassView.isHidden = true
+        }
+    }
+
+    /// Adds or removes the tint glass effect subview, masked to the shape path.
+    private func updateTintGlass() {
+        if configuration.tintKind == .glass, let shapeCGPath {
+            if tintGlassView.superview == nil {
+                addSubview(tintGlassView, positioned: .above, relativeTo: nil)
+                NSLayoutConstraint.activate([
+                    tintGlassView.topAnchor.constraint(equalTo: topAnchor),
+                    tintGlassView.leadingAnchor.constraint(equalTo: leadingAnchor),
+                    tintGlassView.trailingAnchor.constraint(equalTo: trailingAnchor),
+                    tintGlassView.bottomAnchor.constraint(equalTo: bottomAnchor),
+                ])
+                tintGlassView.layer?.mask = tintGlassMaskLayer
+            }
+            tintGlassMaskLayer.path = shapeCGPath
+            tintGlassView.isHidden = false
+        } else if tintGlassView.superview != nil {
+            tintGlassView.isHidden = true
         }
     }
 
@@ -1070,12 +1152,14 @@ private final class MenuBarOverlayPanelContentView: NSView {
             {
                 gradient.draw(in: rect, angle: 0)
             }
+        case .glass:
+            break
         }
     }
 
     /// Draws the background shadow at the top edge of the given rectangle.
     private func drawBackgroundShadow(in rect: CGRect) {
-        guard configuration.backgroundHasShadow else { return }
+        guard configuration.backgroundHasShadow, configuration.backgroundKind != .glass else { return }
         guard let gradient = NSGradient(
             colors: [
                 NSColor(white: 0.0, alpha: 0.0),
@@ -1093,7 +1177,7 @@ private final class MenuBarOverlayPanelContentView: NSView {
 
     /// Draws the background border at the top edge of the given rectangle.
     private func drawBackgroundBorder(in rect: CGRect) {
-        guard configuration.backgroundHasBorder else { return }
+        guard configuration.backgroundHasBorder, configuration.backgroundKind != .glass else { return }
         guard let color = NSColor(cgColor: configuration.backgroundBorderColor) else { return }
         let borderBounds = CGRect(
             x: rect.minX,
@@ -1142,6 +1226,9 @@ private final class MenuBarOverlayPanelContentView: NSView {
                 )
             }
 
+        shapeCGPath = shapePath.cgPath
+        updateTintGlass()
+
         var hasBorder = false
 
         // Background always draws first (full area, behind shapes)
@@ -1154,7 +1241,7 @@ private final class MenuBarOverlayPanelContentView: NSView {
             // No shape tint/shadow/border — background only
             break
         case .full, .split, .notch:
-            if configuration.hasShadow {
+            if configuration.hasShadow, configuration.tintKind != .glass {
                 context.saveGraphicsState()
                 defer {
                     context.restoreGraphicsState()
@@ -1170,7 +1257,7 @@ private final class MenuBarOverlayPanelContentView: NSView {
                 )
             }
 
-            if configuration.hasBorder {
+            if configuration.hasBorder, configuration.tintKind != .glass {
                 hasBorder = true
             }
 

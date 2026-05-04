@@ -16,6 +16,8 @@ enum MenuBarTintKind: Int, CaseIterable, Identifiable {
     case solid = 1
     /// The menu bar is tinted with a gradient.
     case gradient = 2
+    /// The menu bar is tinted with a glass effect.
+    case glass = 3
 
     var id: Int {
         rawValue
@@ -27,6 +29,7 @@ enum MenuBarTintKind: Int, CaseIterable, Identifiable {
         case .noTint: "None"
         case .solid: "Solid"
         case .gradient: "Gradient"
+        case .glass: "Glass"
         }
     }
 }
@@ -35,16 +38,12 @@ extension MenuBarTintKind: Codable {
     init(from decoder: any Decoder) throws {
         let container = try decoder.singleValueContainer()
         let rawValue = try container.decode(Int.self)
-        if rawValue == 3 {
-            self = .solid // legacy blackout → solid
-        } else {
-            guard let value = MenuBarTintKind(rawValue: rawValue) else {
-                throw DecodingError.dataCorruptedError(
-                    in: container,
-                    debugDescription: "Invalid MenuBarTintKind: \(rawValue)"
-                )
-            }
-            self = value
+        guard let value = MenuBarTintKind(rawValue: rawValue) else {
+            throw DecodingError.dataCorruptedError(
+                in: container,
+                debugDescription: "Invalid MenuBarTintKind: \(rawValue)"
+            )
         }
+        self = value
     }
 }

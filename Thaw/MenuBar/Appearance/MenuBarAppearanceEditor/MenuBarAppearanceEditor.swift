@@ -180,10 +180,12 @@ private struct UnlabeledBackgroundEditor: View {
     @ViewBuilder
     private var styleSection: some View {
         backgroundPicker
-        if configuration.backgroundKind != .none {
+        if configuration.backgroundKind != .none, configuration.backgroundKind != .glass {
             backgroundOpacity
         }
-        backgroundShadowToggle
+        if configuration.backgroundKind != .glass {
+            backgroundShadowToggle
+        }
     }
 
     var body: some View {
@@ -197,11 +199,13 @@ private struct UnlabeledBackgroundEditor: View {
                     styleSection
                 }
             }
-            IceSection {
-                backgroundBorderToggle
-                if configuration.backgroundHasBorder {
-                    backgroundBorderColor
-                    backgroundBorderWidth
+            if configuration.backgroundKind != .glass {
+                IceSection {
+                    backgroundBorderToggle
+                    if configuration.backgroundHasBorder {
+                        backgroundBorderColor
+                        backgroundBorderWidth
+                    }
                 }
             }
         }
@@ -234,6 +238,8 @@ private struct UnlabeledBackgroundEditor: View {
                         supportsOpacity: false
                     )
                     .labelsHidden()
+                case .glass:
+                    EmptyView()
                 }
             }
             .frame(height: 24)
@@ -338,10 +344,12 @@ private struct UnlabeledShapeEditor: View {
                 tintOpacity
                 shadowToggle
             }
-            IceSection {
-                borderToggle
-                borderColor
-                borderWidth
+            if configuration.tintKind != .glass {
+                IceSection {
+                    borderToggle
+                    borderColor
+                    borderWidth
+                }
             }
         }
     }
@@ -373,6 +381,8 @@ private struct UnlabeledShapeEditor: View {
                         supportsOpacity: false
                     )
                     .labelsHidden()
+                case .glass:
+                    EmptyView()
                 }
             }
             .frame(height: 24)
@@ -381,7 +391,7 @@ private struct UnlabeledShapeEditor: View {
 
     @ViewBuilder
     private var tintOpacity: some View {
-        if configuration.tintKind != .noTint {
+        if configuration.tintKind != .noTint, configuration.tintKind != .glass {
             LabeledContent("Opacity") {
                 IceSlider(
                     value: $configuration.tintOpacity,
@@ -395,12 +405,18 @@ private struct UnlabeledShapeEditor: View {
         }
     }
 
+    @ViewBuilder
     private var shadowToggle: some View {
-        Toggle("Shadow", isOn: $configuration.hasShadow)
+        if configuration.tintKind != .glass {
+            Toggle("Shadow", isOn: $configuration.hasShadow)
+        }
     }
 
+    @ViewBuilder
     private var borderToggle: some View {
-        Toggle("Border", isOn: $configuration.hasBorder)
+        if configuration.tintKind != .glass {
+            Toggle("Border", isOn: $configuration.hasBorder)
+        }
     }
 
     @ViewBuilder
