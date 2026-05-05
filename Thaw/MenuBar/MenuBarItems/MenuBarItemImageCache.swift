@@ -1113,12 +1113,12 @@ final class MenuBarItemImageCache: ObservableObject, @unchecked Sendable {
             let isValid = if tag.isSystemItem {
                 allValidTags.contains(tag)
             } else {
-                allValidTags.contains(where: { $0.matchesIgnoringWindowID(tag) })
+                containsTagMatchingIgnoringWindowID(allValidTags, target: tag)
             }
             let isPreserved = if tag.isSystemItem {
                 preservedTags.contains(tag)
             } else {
-                preservedTags.contains(where: { $0.matchesIgnoringWindowID(tag) })
+                containsTagMatchingIgnoringWindowID(preservedTags, target: tag)
             }
             return !isValid && !isPreserved
         }
@@ -1294,7 +1294,7 @@ final class MenuBarItemImageCache: ObservableObject, @unchecked Sendable {
                 guard !oldKey.isSystemItem, !newKeysSet.contains(oldKey) else {
                     return false
                 }
-                return newKeysSet.contains(where: { $0.matchesIgnoringWindowID(oldKey) })
+                return containsTagMatchingIgnoringWindowID(newKeysSet, target: oldKey)
             }
             for tag in staleKeys {
                 images.removeValue(forKey: tag)
