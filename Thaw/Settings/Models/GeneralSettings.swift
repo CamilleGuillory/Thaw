@@ -70,7 +70,7 @@ final class GeneralSettings: ObservableObject {
     /// menu bar.
     @Published var showOnScroll = Defaults.DefaultValue.showOnScroll
 
-    /// The offset to apply to the menu bar item spacing and padding.
+    // The offset to apply to the menu bar item spacing and padding.
 
     /// A Boolean value that indicates whether the hidden section
     /// should automatically rehide.

@@ -172,9 +172,9 @@ extension Defaults {
         static let showMenuBarTooltips = false
         static let iconRefreshInterval: TimeInterval = 0.1
         #if DEBUG
-        static let enableDiagnosticLogging = true
+            static let enableDiagnosticLogging = true
         #else
-        static let enableDiagnosticLogging = false
+            static let enableDiagnosticLogging = false
         #endif
         static let useLCSSortingOnNotchedDisplays = false
         static let useOptionClickToShowAlwaysHiddenSection = false

@@ -221,6 +221,7 @@ final class MenuBarItemManager: ObservableObject {
         case preflight
         case expectedSet
     }
+
     private var settlingKind: SettlingKind?
     /// Persisted bundle identifiers explicitly placed in hidden section.
     private var pinnedHiddenBundleIDs = Set<String>()
@@ -572,13 +573,13 @@ final class MenuBarItemManager: ObservableObject {
                     return idx + 1
                 }
             }
-            for i in (anchorPos + 1)..<profileOrder.count {
+            for i in (anchorPos + 1) ..< profileOrder.count {
                 if let idx = itemIdentifiers.firstIndex(of: profileOrder[i]) {
                     return idx
                 }
             }
         } else {
-            for i in (anchorPos + 1)..<profileOrder.count {
+            for i in (anchorPos + 1) ..< profileOrder.count {
                 if let idx = itemIdentifiers.firstIndex(of: profileOrder[i]) {
                     return idx
                 }
@@ -1014,7 +1015,7 @@ final class MenuBarItemManager: ObservableObject {
                         "\(reason): \(stillMissing.count) bundle ID(s) still missing: \(stillMissing.sorted().joined(separator: ", "))"
                     )
                 } else {
-                    if pidsOK && managedCount == lastSeenCount {
+                    if pidsOK, managedCount == lastSeenCount {
                         stablePolls += 1
                         if stablePolls >= stableTarget {
                             MenuBarItemManager.diagLog.debug(

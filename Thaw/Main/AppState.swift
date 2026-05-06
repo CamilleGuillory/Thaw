@@ -79,13 +79,13 @@ final class AppState: ObservableObject {
 
     private lazy var setupTask = Task { @MainActor in
         #if DEBUG
-        // Debug builds always have diagnostic logging on so logs are
-        // captured during development without depending on the toggle.
-        DiagnosticLogger.shared.isEnabled = true
-        #else
-        if Defaults.bool(forKey: .enableDiagnosticLogging) {
+            // Debug builds always have diagnostic logging on so logs are
+            // captured during development without depending on the toggle.
             DiagnosticLogger.shared.isEnabled = true
-        }
+        #else
+            if Defaults.bool(forKey: .enableDiagnosticLogging) {
+                DiagnosticLogger.shared.isEnabled = true
+            }
         #endif
 
         diagLog.debug("setupTask: starting AppState setup sequence")

@@ -618,7 +618,7 @@ final class DisplaySettingsManager: ObservableObject {
     /// renders.
     func allDisplays() -> [DisplayInfo] {
         let connected = connectedDisplays()
-        let connectedIDs = Set(connected.map { $0.id })
+        let connectedIDs = Set(connected.map(\.id))
 
         let disconnected: [DisplayInfo] = knownDisplays
             .filter { !connectedIDs.contains($0.key) }
