@@ -457,7 +457,7 @@ final class MenuBarOverlayPanel: NSPanel, @unchecked Sendable {
         updateFlags = [.applicationMenuFrame]
 
         if !appState.menuBarManager.isMenuBarHiddenBySystem {
-            animator().alphaValue = 1
+            alphaValue = 1
         }
     }
 
