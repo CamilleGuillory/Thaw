@@ -499,7 +499,9 @@ final class MenuBarManager: ObservableObject {
         // unwinds and the enclosing Task completes, so terminate's wait loop can
         // drain the restore and timeout Tasks scheduled by applicationShouldTerminate.
         RunLoop.main.perform(inModes: [.default]) {
-            NSApp.terminate(nil)
+            MainActor.assumeIsolated {
+                NSApp.terminate(nil)
+            }
         }
     }
 
