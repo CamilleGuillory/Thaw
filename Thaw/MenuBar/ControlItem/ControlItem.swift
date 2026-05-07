@@ -753,7 +753,22 @@ final class ControlItem {
         quitItem.image = NSImage(systemSymbolName: "power", accessibilityDescription: "Quit")
         menu.addItem(quitItem)
 
+        let restartItem = NSMenuItem(
+            title: String(localized: "Restart \(Constants.displayName)"),
+            action: #selector(restartFromMenu),
+            keyEquivalent: "q"
+        )
+        restartItem.keyEquivalentModifierMask = [.command, .option]
+        restartItem.isAlternate = true
+        restartItem.target = self
+        restartItem.image = NSImage(systemSymbolName: "arrow.counterclockwise", accessibilityDescription: "Restart")
+        menu.addItem(restartItem)
+
         return menu
+    }
+
+    @objc private func restartFromMenu() {
+        appState?.restartSelf()
     }
 
     /// Shows the control item's menu.

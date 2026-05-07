@@ -486,6 +486,17 @@ final class MenuBarManager: ObservableObject {
             quitItem.target = self
             quitItem.image = NSImage(systemSymbolName: "power", accessibilityDescription: "Quit")
             menu.addItem(quitItem)
+
+            let restartItem = NSMenuItem(
+                title: String(localized: "Restart \(Constants.displayName)"),
+                action: #selector(restartFromSecondaryContextMenu),
+                keyEquivalent: "q"
+            )
+            restartItem.keyEquivalentModifierMask = [.command, .option]
+            restartItem.isAlternate = true
+            restartItem.target = self
+            restartItem.image = NSImage(systemSymbolName: "arrow.counterclockwise", accessibilityDescription: "Restart")
+            menu.addItem(restartItem)
         }
 
         menu.popUp(positioning: nil, at: point, in: nil)
@@ -501,6 +512,14 @@ final class MenuBarManager: ObservableObject {
         RunLoop.main.perform(inModes: [.default]) {
             MainActor.assumeIsolated {
                 NSApp.terminate(nil)
+            }
+        }
+    }
+
+    @objc private func restartFromSecondaryContextMenu() {
+        RunLoop.main.perform(inModes: [.default]) { [weak self] in
+            MainActor.assumeIsolated {
+                self?.appState?.restartSelf()
             }
         }
     }

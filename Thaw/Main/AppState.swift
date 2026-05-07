@@ -371,29 +371,27 @@ final class AppState: ObservableObject {
     }
 
     /// Relaunches the current app instance silently.
-    private func restartSelf() {
+    func restartSelf() {
         guard !isRestarting else { return }
         isRestarting = true
 
-        Task { @MainActor [diagLog] in
-            // Save image cache to disk before restarting so new instance can load it
-            imageCache.saveToDisk()
+        // Save image cache to disk before restarting so new instance can load it
+        imageCache.saveToDisk()
 
-            let config = NSWorkspace.OpenConfiguration()
-            config.activates = false
-            config.addsToRecentItems = false
-            config.createsNewApplicationInstance = true
-            config.promptsUserIfNeeded = false
+        let config = NSWorkspace.OpenConfiguration()
+        config.activates = false
+        config.addsToRecentItems = false
+        config.createsNewApplicationInstance = true
+        config.promptsUserIfNeeded = false
 
-            if let url = Bundle.main.bundleURL as URL? {
-                do {
-                    _ = try await NSWorkspace.shared.openApplication(at: url, configuration: config)
-                    try? await Task.sleep(for: .milliseconds(300))
-                    NSApp.terminate(nil)
-                } catch {
-                    diagLog.error("Failed to relaunch app: \(error.localizedDescription)")
-                    isRestarting = false
-                }
+        Task { @MainActor in
+            do {
+                _ = try await NSWorkspace.shared.openApplication(at: Bundle.main.bundleURL, configuration: config)
+                try? await Task.sleep(for: .milliseconds(500))
+                exit(0)
+            } catch {
+                diagLog.error("Failed to relaunch app: \(error.localizedDescription)")
+                isRestarting = false
             }
         }
     }
