@@ -1,7 +1,8 @@
-.DS_Store
-build/
-xcuserdata/
-.build/
+.DS_Store  
+xcuserdata/  
+build/  
+!.github/actions/build/  
+!.github/actions/build/** 
 DerivedData/
 *.ipa
 *.dSYM

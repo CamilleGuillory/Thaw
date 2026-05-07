@@ -1,40 +1,16 @@
-name: Release
+name: Build DMG
 
 on:
-  push:
-    tags:
-      - "*.*.*"
   workflow_dispatch:
-    inputs:
-      tag:
-        description: Release tag to publish (for example, 1.2.3)
-        required: true
-        type: string
 
 jobs:
-  release:
+  build-dmg:
     runs-on: macos-26
-    permissions:
-      contents: write
     env:
       APP_NAME: "Thaw.app"
-      DMG_NAME: "Thaw.dmg"
+      DMG_NAME: "Thaw-dev.dmg"
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v6
-        with:
-          fetch-depth: 0
-          ref: ${{ github.event_name == 'workflow_dispatch' && format('refs/tags/{0}', inputs.tag) || github.ref }}
-
-      - name: Validate tag name format
-        id: validate
-        env:
-          TAG_NAME: ${{ inputs.tag || github.ref_name }}
-        run: |
-          if [[ ! "$TAG_NAME" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9._]+)?$ ]]; then
-            echo "Invalid tag name format. Must be in the form 1.2.3"
-            exit 1
-          fi
+      - uses: actions/checkout@v6
 
       - name: Configure signing
         uses: ./.github/actions/configure-signing
@@ -63,15 +39,12 @@ jobs:
           dmg-name: ${{ env.DMG_NAME }}
           app-name: ${{ env.APP_NAME }}
 
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@v3
+      - name: Upload DMG
+        uses: actions/upload-artifact@v7
         with:
-          tag_name: ${{ inputs.tag || github.ref_name }}
-          files: build/${{ env.DMG_NAME }}
-          generate_release_notes: false
-          draft: true
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          name: Thaw-dmg
+          path: build/${{ env.DMG_NAME }}
+          retention-days: 3
 
       - name: Cleanup keychain
         if: always()
