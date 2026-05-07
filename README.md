@@ -149,6 +149,8 @@ _Note: languages marked with (\*) are currently only available in the developmen
 
 Help translate Thaw via [Crowdin](https://crowdin.com/project/thaw)
 
+If a language you'd like to help to translate is not listed here, let us know and we will add it on Crowdin. 
+
 ## Features/Roadmap
 
 <details>
