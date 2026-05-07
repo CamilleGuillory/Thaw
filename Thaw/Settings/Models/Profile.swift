@@ -99,6 +99,7 @@ struct AdvancedSettingsSnapshot: Codable {
     var showMenuBarTooltips: Bool
     var iconRefreshInterval: TimeInterval
     var enableDiagnosticLogging: Bool
+    var useDoubleClickToShowAlwaysHiddenSection: Bool
 
     @MainActor
     static func capture(from settings: AdvancedSettings) -> AdvancedSettingsSnapshot {
@@ -112,7 +113,8 @@ struct AdvancedSettingsSnapshot: Codable {
             tooltipDelay: settings.tooltipDelay,
             showMenuBarTooltips: settings.showMenuBarTooltips,
             iconRefreshInterval: settings.iconRefreshInterval,
-            enableDiagnosticLogging: settings.enableDiagnosticLogging
+            enableDiagnosticLogging: settings.enableDiagnosticLogging,
+            useDoubleClickToShowAlwaysHiddenSection: settings.useDoubleClickToShowAlwaysHiddenSection
         )
     }
 
@@ -130,6 +132,7 @@ struct AdvancedSettingsSnapshot: Codable {
         settings.showMenuBarTooltips = showMenuBarTooltips
         settings.iconRefreshInterval = iconRefreshInterval
         settings.enableDiagnosticLogging = enableDiagnosticLogging
+        settings.useDoubleClickToShowAlwaysHiddenSection = useDoubleClickToShowAlwaysHiddenSection
     }
 }
 
@@ -282,7 +285,8 @@ struct Profile: Codable, Identifiable {
             tooltipDelay: Defaults.DefaultValue.tooltipDelay,
             showMenuBarTooltips: Defaults.DefaultValue.showMenuBarTooltips,
             iconRefreshInterval: Defaults.DefaultValue.iconRefreshInterval,
-            enableDiagnosticLogging: Defaults.DefaultValue.enableDiagnosticLogging
+            enableDiagnosticLogging: Defaults.DefaultValue.enableDiagnosticLogging,
+            useDoubleClickToShowAlwaysHiddenSection: Defaults.DefaultValue.useDoubleClickToShowAlwaysHiddenSection
         )
 
         hotkeys = try container.decodeIfPresent(

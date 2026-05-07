@@ -18,6 +18,7 @@ final class AdvancedSettings: ObservableObject {
     /// is enabled.
     @Published var enableAlwaysHiddenSection = Defaults.DefaultValue.enableAlwaysHiddenSection
     @Published var useOptionClickToShowAlwaysHiddenSection = Defaults.DefaultValue.useOptionClickToShowAlwaysHiddenSection
+    @Published var useDoubleClickToShowAlwaysHiddenSection = Defaults.DefaultValue.useDoubleClickToShowAlwaysHiddenSection
 
     /// A Boolean value that indicates whether to show all sections when
     /// the user is dragging items in the menu bar.
@@ -80,6 +81,7 @@ final class AdvancedSettings: ObservableObject {
     private func loadInitialState() {
         Defaults.ifPresent(key: .enableAlwaysHiddenSection, assign: &enableAlwaysHiddenSection)
         Defaults.ifPresent(key: .useOptionClickToShowAlwaysHiddenSection, assign: &useOptionClickToShowAlwaysHiddenSection)
+        Defaults.ifPresent(key: .useDoubleClickToShowAlwaysHiddenSection, assign: &useDoubleClickToShowAlwaysHiddenSection)
         Defaults.ifPresent(key: .showAllSectionsOnUserDrag, assign: &showAllSectionsOnUserDrag)
         Defaults.ifPresent(key: .hideApplicationMenus, assign: &hideApplicationMenus)
         Defaults.ifPresent(key: .enableSecondaryContextMenu, assign: &enableSecondaryContextMenu)
@@ -105,6 +107,7 @@ final class AdvancedSettings: ObservableObject {
 
         $enableAlwaysHiddenSection.persistToDefaults(key: .enableAlwaysHiddenSection, in: &c)
         $useOptionClickToShowAlwaysHiddenSection.persistToDefaults(key: .useOptionClickToShowAlwaysHiddenSection, in: &c)
+        $useDoubleClickToShowAlwaysHiddenSection.persistToDefaults(key: .useDoubleClickToShowAlwaysHiddenSection, in: &c)
         $showAllSectionsOnUserDrag.persistToDefaults(key: .showAllSectionsOnUserDrag, in: &c)
         $sectionDividerStyle.persistToDefaults(key: .sectionDividerStyle, transform: \.rawValue, in: &c)
         $hideApplicationMenus.persistToDefaults(key: .hideApplicationMenus, in: &c)
@@ -155,6 +158,8 @@ final class AdvancedSettings: ObservableObject {
                 enableAlwaysHiddenSection = boolValue
             case "useOptionClickToShowAlwaysHiddenSection":
                 useOptionClickToShowAlwaysHiddenSection = boolValue
+            case "useDoubleClickToShowAlwaysHiddenSection":
+                useDoubleClickToShowAlwaysHiddenSection = boolValue
             case "showAllSectionsOnUserDrag":
                 showAllSectionsOnUserDrag = boolValue
             case "hideApplicationMenus":

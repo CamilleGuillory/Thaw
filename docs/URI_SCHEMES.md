@@ -136,6 +136,7 @@ Thaw supports programmatic settings manipulation via the `thaw://` URL scheme wi
 | `hideApplicationMenus`                    | Bool | Hide application menu titles                 |
 | `enableAlwaysHiddenSection`               | Bool | Enable the always-hidden section             |
 | `useOptionClickToShowAlwaysHiddenSection` | Bool | Option-click shows always-hidden items       |
+| `useDoubleClickToShowAlwaysHiddenSection` | Bool | Double-click Thaw icon shows always-hidden   |
 | `enableSecondaryContextMenu`              | Bool | Right-click shows alternate menu             |
 | `showAllSectionsOnUserDrag`               | Bool | Reveal all sections during drag              |
 | `showMenuBarTooltips`                     | Bool | Show hover tooltips on menu bar items        |

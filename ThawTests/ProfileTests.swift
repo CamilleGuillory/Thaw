@@ -264,7 +264,8 @@ final class ProfileFullTests: XCTestCase {
                 tooltipDelay: 1.0,
                 showMenuBarTooltips: true,
                 iconRefreshInterval: 3.0,
-                enableDiagnosticLogging: false
+                enableDiagnosticLogging: false,
+                useDoubleClickToShowAlwaysHiddenSection: false
             ),
             hotkeys: [:],
             displayConfigurations: [:],
@@ -472,7 +473,8 @@ final class ProfileContentTests: XCTestCase {
             tooltipDelay: 1.0,
             showMenuBarTooltips: true,
             iconRefreshInterval: 3.0,
-            enableDiagnosticLogging: false
+            enableDiagnosticLogging: false,
+            useDoubleClickToShowAlwaysHiddenSection: false
         )
 
         let content = ProfileContent(
@@ -524,7 +526,8 @@ final class ProfileContentTests: XCTestCase {
                 tooltipDelay: 1.0,
                 showMenuBarTooltips: true,
                 iconRefreshInterval: 3.0,
-                enableDiagnosticLogging: false
+                enableDiagnosticLogging: false,
+                useDoubleClickToShowAlwaysHiddenSection: false
             ),
             hotkeys: [:],
             displayConfigurations: [:],

@@ -41,6 +41,9 @@ struct AdvancedSettingsPane: View {
                 enableAlwaysHiddenSection
                 if settings.enableAlwaysHiddenSection {
                     useOptionClickToShowAlwaysHiddenSection
+                    if appState.settings.general.showIceIcon {
+                        useDoubleClickToShowAlwaysHiddenSection
+                    }
                 }
                 showAllSectionsOnUserDrag
                 sectionDividerStyle
@@ -121,6 +124,13 @@ struct AdvancedSettingsPane: View {
         Toggle(
             "Use Option-click to open always-hidden section",
             isOn: $settings.useOptionClickToShowAlwaysHiddenSection
+        )
+    }
+
+    private var useDoubleClickToShowAlwaysHiddenSection: some View {
+        Toggle(
+            "Double-click \(Constants.displayName) icon to open always-hidden section",
+            isOn: $settings.useDoubleClickToShowAlwaysHiddenSection
         )
     }
 

@@ -38,7 +38,8 @@ final class AdvancedSettingsSnapshotTests: XCTestCase {
             tooltipDelay: 1.0,
             showMenuBarTooltips: true,
             iconRefreshInterval: 3.0,
-            enableDiagnosticLogging: false
+            enableDiagnosticLogging: false,
+            useDoubleClickToShowAlwaysHiddenSection: false
         )
     }
 
@@ -53,7 +54,8 @@ final class AdvancedSettingsSnapshotTests: XCTestCase {
             tooltipDelay: 2.0,
             showMenuBarTooltips: false,
             iconRefreshInterval: 5.0,
-            enableDiagnosticLogging: true
+            enableDiagnosticLogging: true,
+            useDoubleClickToShowAlwaysHiddenSection: true
         )
     }
 
@@ -72,6 +74,7 @@ final class AdvancedSettingsSnapshotTests: XCTestCase {
         XCTAssertTrue(snapshot.showMenuBarTooltips)
         XCTAssertEqual(snapshot.iconRefreshInterval, 3.0)
         XCTAssertFalse(snapshot.enableDiagnosticLogging)
+        XCTAssertFalse(snapshot.useDoubleClickToShowAlwaysHiddenSection)
     }
 
     func testCustomSnapshotValues() {
@@ -87,6 +90,7 @@ final class AdvancedSettingsSnapshotTests: XCTestCase {
         XCTAssertFalse(snapshot.showMenuBarTooltips)
         XCTAssertEqual(snapshot.iconRefreshInterval, 5.0)
         XCTAssertTrue(snapshot.enableDiagnosticLogging)
+        XCTAssertTrue(snapshot.useDoubleClickToShowAlwaysHiddenSection)
     }
 
     // MARK: - Encode/Decode Tests
@@ -107,6 +111,7 @@ final class AdvancedSettingsSnapshotTests: XCTestCase {
         XCTAssertEqual(decoded.showMenuBarTooltips, original.showMenuBarTooltips)
         XCTAssertEqual(decoded.iconRefreshInterval, original.iconRefreshInterval)
         XCTAssertEqual(decoded.enableDiagnosticLogging, original.enableDiagnosticLogging)
+        XCTAssertEqual(decoded.useDoubleClickToShowAlwaysHiddenSection, original.useDoubleClickToShowAlwaysHiddenSection)
     }
 
     func testEncodeDecodeCustomSnapshot() throws {
@@ -125,6 +130,7 @@ final class AdvancedSettingsSnapshotTests: XCTestCase {
         XCTAssertEqual(decoded.showMenuBarTooltips, false)
         XCTAssertEqual(decoded.iconRefreshInterval, 5.0)
         XCTAssertEqual(decoded.enableDiagnosticLogging, true)
+        XCTAssertEqual(decoded.useDoubleClickToShowAlwaysHiddenSection, true)
     }
 
     // MARK: - SectionDividerStyle Tests
@@ -230,7 +236,8 @@ final class AdvancedSettingsSnapshotTests: XCTestCase {
             tooltipDelay: 0,
             showMenuBarTooltips: false,
             iconRefreshInterval: 0,
-            enableDiagnosticLogging: false
+            enableDiagnosticLogging: false,
+            useDoubleClickToShowAlwaysHiddenSection: false
         )
 
         let data = try encoder.encode(snapshot)
@@ -242,6 +249,7 @@ final class AdvancedSettingsSnapshotTests: XCTestCase {
         XCTAssertFalse(decoded.enableSecondaryContextMenu)
         XCTAssertFalse(decoded.showMenuBarTooltips)
         XCTAssertFalse(decoded.enableDiagnosticLogging)
+        XCTAssertFalse(decoded.useDoubleClickToShowAlwaysHiddenSection)
     }
 
     func testAllBooleansTrue() throws {
@@ -255,7 +263,8 @@ final class AdvancedSettingsSnapshotTests: XCTestCase {
             tooltipDelay: 0,
             showMenuBarTooltips: true,
             iconRefreshInterval: 0,
-            enableDiagnosticLogging: true
+            enableDiagnosticLogging: true,
+            useDoubleClickToShowAlwaysHiddenSection: true
         )
 
         let data = try encoder.encode(snapshot)
@@ -267,5 +276,6 @@ final class AdvancedSettingsSnapshotTests: XCTestCase {
         XCTAssertTrue(decoded.enableSecondaryContextMenu)
         XCTAssertTrue(decoded.showMenuBarTooltips)
         XCTAssertTrue(decoded.enableDiagnosticLogging)
+        XCTAssertTrue(decoded.useDoubleClickToShowAlwaysHiddenSection)
     }
 }
