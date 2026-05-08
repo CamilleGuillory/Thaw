@@ -36,13 +36,8 @@ final class DisplaySettingsManager: ObservableObject {
     /// JSON decoder for persistence.
     private let decoder = JSONDecoder()
 
-    /// Reference to AppState for driving spacingManager and itemManager from
-    /// active-display configuration changes. Held weakly to avoid retain cycles.
-    private weak var appState: AppState?
-
     /// Performs the initial setup of the manager.
-    func performSetup(with appState: AppState) {
-        self.appState = appState
+    func performSetup(with _: AppState) {
         loadInitialState()
         configureCancellables()
         captureCurrentlyConnectedDisplays()
@@ -143,18 +138,10 @@ final class DisplaySettingsManager: ObservableObject {
             }
             .store(in: &c)
 
-        // Listen for display connect/disconnect to log changes, refresh the
-        // known-display cache, and re-derive the active display's spacing.
-        //
-        // Debounced because didChangeScreenParametersNotification fires
-        // repeatedly during a single user action: docking, lid close,
-        // monitor sleep/wake, KVM switch, Sidecar handshake, and external
-        // display flicker can each post several notifications within a
-        // few hundred milliseconds. Without the debounce, every flap
-        // could trigger a relaunch wave (the no-op guard catches the
-        // common case but does not cover oscillating values during the
-        // flap window). One second coalesces a single docking event into
-        // one apply.
+        // Listen for display connect/disconnect to refresh the known-display
+        // cache. Debounced because didChangeScreenParametersNotification fires
+        // repeatedly during docking, lid close, monitor sleep/wake, KVM
+        // switches, Sidecar handshakes, and external display flicker.
         NotificationCenter.default
             .publisher(for: NSApplication.didChangeScreenParametersNotification)
             .debounce(for: .seconds(1), scheduler: DispatchQueue.main)
@@ -162,20 +149,6 @@ final class DisplaySettingsManager: ObservableObject {
                 guard let self else { return }
                 diagLog.info("Screen parameters changed — \(NSScreen.screens.count) screen(s) connected")
                 captureCurrentlyConnectedDisplays()
-                applyActiveDisplaySpacing(reason: "screenParametersChanged")
-            }
-            .store(in: &c)
-
-        // Whenever per-display configurations change (user edit, profile
-        // load), re-derive what the active display's spacing should be and
-        // apply it. The no-op guard inside applyOffset() makes this free
-        // when on-disk already matches.
-        $configurations
-            .dropFirst()
-            .removeDuplicates()
-            .receive(on: DispatchQueue.main)
-            .sink { [weak self] _ in
-                self?.applyActiveDisplaySpacing(reason: "configurationsChanged")
             }
             .store(in: &c)
 
@@ -189,51 +162,6 @@ final class DisplaySettingsManager: ObservableObject {
             .store(in: &c)
 
         cancellables = c
-    }
-
-    /// Reads the active display's spacing offset, syncs it into
-    /// spacingManager.offset, and triggers applyOffset. The no-op guard
-    /// inside applyOffset skips when on-disk values already match, so this
-    /// is safe to call on every configurations change. On a real relaunch
-    /// wave, kicks off a settling period so a subsequent applyProfileLayout
-    /// (e.g. from a profile switch) waits for items to re-attach before
-    /// moving them.
-    private func applyActiveDisplaySpacing(reason: String) {
-        guard let appState else { return }
-        let desired = Int(configurationForActiveDisplay().itemSpacingOffset.rounded())
-        appState.spacingManager.offset = desired
-        Task { [weak self] in
-            guard let self else { return }
-            // Preflight settling so intermediate late-arriver re-sorts and
-            // restore logic are suppressed while the wave runs. Cancelled
-            // below if applyOffset turns out to be a no-op.
-            appState.itemManager.startSettlingPeriod(reason: "spacingRelaunch:\(reason):preflight")
-            do {
-                let outcome = try await appState.spacingManager.applyOffset()
-                if outcome.didRelaunch {
-                    appState.itemManager.startSettlingPeriod(
-                        reason: "spacingRelaunch:\(reason)",
-                        expectedBundleIDs: outcome.recoveredBundleIDs
-                    )
-                    // The relaunched apps reattach at OS-default positions.
-                    // Drive the active profile's layout pass so they end up
-                    // in the saved order. Auto-switch doesn't fire when the
-                    // associated profile is unchanged, so without this call
-                    // the post-settle path would only run cross-section
-                    // restore and leave within-section ordering untouched.
-                    appState.profileManager.reapplyActiveProfile()
-                } else {
-                    appState.itemManager.cancelSettlingPeriod(
-                        reason: "spacingRelaunch:\(reason):noOp"
-                    )
-                }
-            } catch {
-                appState.itemManager.cancelSettlingPeriod(
-                    reason: "spacingRelaunch:\(reason):error"
-                )
-                diagLog.error("applyActiveDisplaySpacing(\(reason)) failed: \(error)")
-            }
-        }
     }
 
     /// Handles per-display settings changed externally via Settings URI scheme.

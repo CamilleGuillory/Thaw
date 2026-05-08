@@ -41,6 +41,7 @@ final class GeneralSettingsSnapshotTests: XCTestCase {
             showOnDoubleClick: false,
             showOnHover: false,
             showOnScroll: false,
+            itemSpacingOffset: 0,
             autoRehide: true,
             rehideStrategyRawValue: 0,
             rehideInterval: 15
@@ -65,6 +66,7 @@ final class GeneralSettingsSnapshotTests: XCTestCase {
             showOnDoubleClick: true,
             showOnHover: true,
             showOnScroll: true,
+            itemSpacingOffset: -8,
             autoRehide: false,
             rehideStrategyRawValue: 2,
             rehideInterval: 30
@@ -87,6 +89,7 @@ final class GeneralSettingsSnapshotTests: XCTestCase {
         XCTAssertFalse(snapshot.showOnDoubleClick)
         XCTAssertFalse(snapshot.showOnHover)
         XCTAssertFalse(snapshot.showOnScroll)
+        XCTAssertEqual(snapshot.itemSpacingOffset, 0)
         XCTAssertTrue(snapshot.autoRehide)
         XCTAssertEqual(snapshot.rehideStrategyRawValue, 0)
         XCTAssertEqual(snapshot.rehideInterval, 15)
@@ -106,6 +109,7 @@ final class GeneralSettingsSnapshotTests: XCTestCase {
         XCTAssertTrue(snapshot.showOnDoubleClick)
         XCTAssertTrue(snapshot.showOnHover)
         XCTAssertTrue(snapshot.showOnScroll)
+        XCTAssertEqual(snapshot.itemSpacingOffset, -8)
         XCTAssertFalse(snapshot.autoRehide)
         XCTAssertEqual(snapshot.rehideStrategyRawValue, 2)
         XCTAssertEqual(snapshot.rehideInterval, 30)
@@ -124,6 +128,7 @@ final class GeneralSettingsSnapshotTests: XCTestCase {
         XCTAssertEqual(decoded.useIceBar, original.useIceBar)
         XCTAssertEqual(decoded.iceBarLocation, original.iceBarLocation)
         XCTAssertEqual(decoded.showOnClick, original.showOnClick)
+        XCTAssertEqual(decoded.itemSpacingOffset, original.itemSpacingOffset)
         XCTAssertEqual(decoded.autoRehide, original.autoRehide)
         XCTAssertEqual(decoded.rehideStrategyRawValue, original.rehideStrategyRawValue)
         XCTAssertEqual(decoded.rehideInterval, original.rehideInterval)
@@ -145,6 +150,7 @@ final class GeneralSettingsSnapshotTests: XCTestCase {
         XCTAssertEqual(decoded.showOnDoubleClick, true)
         XCTAssertEqual(decoded.showOnHover, true)
         XCTAssertEqual(decoded.showOnScroll, true)
+        XCTAssertEqual(decoded.itemSpacingOffset, -8)
         XCTAssertEqual(decoded.autoRehide, false)
         XCTAssertEqual(decoded.rehideStrategyRawValue, 2)
         XCTAssertEqual(decoded.rehideInterval, 30)
@@ -168,6 +174,28 @@ final class GeneralSettingsSnapshotTests: XCTestCase {
         let decoded = try decoder.decode(GeneralSettingsSnapshot.self, from: data)
 
         XCTAssertNotNil(decoded.lastCustomIceIcon)
+    }
+
+    func testDecodeWithoutItemSpacingOffsetUsesDefault() throws {
+        let data = try encoder.encode(makeDefaultSnapshot())
+        var json = try XCTUnwrap(JSONSerialization.jsonObject(with: data) as? [String: Any])
+        json.removeValue(forKey: "itemSpacingOffset")
+
+        let legacyData = try JSONSerialization.data(withJSONObject: json)
+        let decoded = try decoder.decode(GeneralSettingsSnapshot.self, from: legacyData)
+
+        XCTAssertEqual(decoded.itemSpacingOffset, Defaults.DefaultValue.itemSpacingOffset)
+    }
+
+    func testDecodeClampsItemSpacingOffset() throws {
+        let data = try encoder.encode(makeDefaultSnapshot())
+        var json = try XCTUnwrap(JSONSerialization.jsonObject(with: data) as? [String: Any])
+        json["itemSpacingOffset"] = 99
+
+        let legacyData = try JSONSerialization.data(withJSONObject: json)
+        let decoded = try decoder.decode(GeneralSettingsSnapshot.self, from: legacyData)
+
+        XCTAssertEqual(decoded.itemSpacingOffset, 16)
     }
 
     // MARK: - IceBarLocation Tests

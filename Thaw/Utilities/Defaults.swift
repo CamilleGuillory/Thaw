@@ -154,6 +154,7 @@ extension Defaults {
         static let showOnDoubleClick = true
         static let showOnHover = false
         static let showOnScroll = true
+        static let itemSpacingOffset: Double = 0
         static let autoRehide = true
         static let rehideStrategy: RehideStrategy = .smart
         static let rehideInterval: TimeInterval = 15
@@ -218,6 +219,7 @@ extension Defaults {
         case autoRehide = "AutoRehide"
         case rehideStrategy = "RehideStrategy"
         case rehideInterval = "RehideInterval"
+        case itemSpacingOffset = "ItemSpacingOffset"
         case displayIceBarConfigurations = "DisplayIceBarConfigurations"
         case knownDisplays = "KnownDisplays"
 

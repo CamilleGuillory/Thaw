@@ -224,15 +224,16 @@ final class ProfileManager: ObservableObject {
 
     /// Applies a profile's settings to the running app state.
     ///
-    /// The menu bar item spacing offset is applied after the snapshot is
-    /// pushed, driving the per-profile spacing behaviour. The no-op guard
-    /// inside applyOffset skips the relaunch when the on-disk values
+    /// The menu bar item spacing offset is global, but profiles can still
+    /// restore it as part of their General settings snapshot. The no-op
+    /// guard inside applyOffset skips the relaunch when the on-disk values
     /// already match, so identical-offset switches cost nothing.
     func applyProfile(_ profile: Profile, to appState: AppState) {
         diagLog.debug(
             "applyProfile entered: name=\(profile.name)"
         )
         profile.generalSettings.apply(to: appState.settings.general)
+        appState.spacingManager.offset = Int(profile.generalSettings.itemSpacingOffset.rounded())
         profile.advancedSettings.apply(to: appState.settings.advanced)
 
         // Apply hotkeys
@@ -731,14 +732,11 @@ final class ProfileManager: ObservableObject {
     /// Re-applies the currently active profile, driving its layout pass
     /// without changing which profile is active.
     ///
-    /// Used by DisplaySettingsManager.applyActiveDisplaySpacing after it
-    /// fires a relaunch wave whose menu bar items reattach at OS-default
-    /// positions: the auto-switch path doesn't fire when the active display
-    /// keeps the same associated profile, so without an explicit re-apply
-    /// the layout would never run and the items would stay where macOS put
-    /// them. The applyOffset inside layoutTask no-ops (the on-disk values
-    /// were just written), and the subsequent applyProfileLayout awaits
-    /// the in-flight expected-set settling before running.
+    /// Used after spacing-related relaunch waves whose menu bar items
+    /// reattach at OS-default positions. The applyOffset inside layoutTask
+    /// no-ops when the on-disk values were just written, and the subsequent
+    /// applyProfileLayout awaits the in-flight expected-set settling before
+    /// running.
     func reapplyActiveProfile() {
         guard let appState else { return }
         guard let activeID = activeProfileID else { return }

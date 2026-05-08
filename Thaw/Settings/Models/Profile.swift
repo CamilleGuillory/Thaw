@@ -38,9 +38,46 @@ struct GeneralSettingsSnapshot: Codable {
     var showOnDoubleClick: Bool
     var showOnHover: Bool
     var showOnScroll: Bool
+    var itemSpacingOffset: Double
     var autoRehide: Bool
     var rehideStrategyRawValue: Int
     var rehideInterval: TimeInterval
+
+    init(
+        showIceIcon: Bool,
+        iceIcon: ControlItemImageSet,
+        lastCustomIceIcon: ControlItemImageSet?,
+        customIceIconIsTemplate: Bool,
+        useIceBar: Bool,
+        useIceBarOnlyOnNotchedDisplay: Bool,
+        iceBarLocation: IceBarLocation,
+        iceBarLocationOnHotkey: Bool,
+        showOnClick: Bool,
+        showOnDoubleClick: Bool,
+        showOnHover: Bool,
+        showOnScroll: Bool,
+        itemSpacingOffset: Double = Defaults.DefaultValue.itemSpacingOffset,
+        autoRehide: Bool,
+        rehideStrategyRawValue: Int,
+        rehideInterval: TimeInterval
+    ) {
+        self.showIceIcon = showIceIcon
+        self.iceIcon = iceIcon
+        self.lastCustomIceIcon = lastCustomIceIcon
+        self.customIceIconIsTemplate = customIceIconIsTemplate
+        self.useIceBar = useIceBar
+        self.useIceBarOnlyOnNotchedDisplay = useIceBarOnlyOnNotchedDisplay
+        self.iceBarLocation = iceBarLocation
+        self.iceBarLocationOnHotkey = iceBarLocationOnHotkey
+        self.showOnClick = showOnClick
+        self.showOnDoubleClick = showOnDoubleClick
+        self.showOnHover = showOnHover
+        self.showOnScroll = showOnScroll
+        self.itemSpacingOffset = Self.clampItemSpacingOffset(itemSpacingOffset)
+        self.autoRehide = autoRehide
+        self.rehideStrategyRawValue = rehideStrategyRawValue
+        self.rehideInterval = rehideInterval
+    }
 
     @MainActor
     static func capture(from settings: GeneralSettings) -> GeneralSettingsSnapshot {
@@ -57,6 +94,7 @@ struct GeneralSettingsSnapshot: Codable {
             showOnDoubleClick: settings.showOnDoubleClick,
             showOnHover: settings.showOnHover,
             showOnScroll: settings.showOnScroll,
+            itemSpacingOffset: settings.itemSpacingOffset,
             autoRehide: settings.autoRehide,
             rehideStrategyRawValue: settings.rehideStrategy.rawValue,
             rehideInterval: settings.rehideInterval
@@ -77,11 +115,58 @@ struct GeneralSettingsSnapshot: Codable {
         settings.showOnDoubleClick = showOnDoubleClick
         settings.showOnHover = showOnHover
         settings.showOnScroll = showOnScroll
+        settings.itemSpacingOffset = itemSpacingOffset
         settings.autoRehide = autoRehide
         if let strategy = RehideStrategy(rawValue: rehideStrategyRawValue) {
             settings.rehideStrategy = strategy
         }
         settings.rehideInterval = rehideInterval
+    }
+
+    private static func clampItemSpacingOffset(_ value: Double) -> Double {
+        Swift.max(-16, Swift.min(value, 16))
+    }
+
+    enum CodingKeys: String, CodingKey {
+        case showIceIcon
+        case iceIcon
+        case lastCustomIceIcon
+        case customIceIconIsTemplate
+        case useIceBar
+        case useIceBarOnlyOnNotchedDisplay
+        case iceBarLocation
+        case iceBarLocationOnHotkey
+        case showOnClick
+        case showOnDoubleClick
+        case showOnHover
+        case showOnScroll
+        case itemSpacingOffset
+        case autoRehide
+        case rehideStrategyRawValue
+        case rehideInterval
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.init(
+            showIceIcon: try container.decode(Bool.self, forKey: .showIceIcon),
+            iceIcon: try container.decode(ControlItemImageSet.self, forKey: .iceIcon),
+            lastCustomIceIcon: try container.decodeIfPresent(ControlItemImageSet.self, forKey: .lastCustomIceIcon),
+            customIceIconIsTemplate: try container.decode(Bool.self, forKey: .customIceIconIsTemplate),
+            useIceBar: try container.decode(Bool.self, forKey: .useIceBar),
+            useIceBarOnlyOnNotchedDisplay: try container.decode(Bool.self, forKey: .useIceBarOnlyOnNotchedDisplay),
+            iceBarLocation: try container.decode(IceBarLocation.self, forKey: .iceBarLocation),
+            iceBarLocationOnHotkey: try container.decode(Bool.self, forKey: .iceBarLocationOnHotkey),
+            showOnClick: try container.decode(Bool.self, forKey: .showOnClick),
+            showOnDoubleClick: try container.decode(Bool.self, forKey: .showOnDoubleClick),
+            showOnHover: try container.decode(Bool.self, forKey: .showOnHover),
+            showOnScroll: try container.decode(Bool.self, forKey: .showOnScroll),
+            itemSpacingOffset: try container.decodeIfPresent(Double.self, forKey: .itemSpacingOffset)
+                ?? Defaults.DefaultValue.itemSpacingOffset,
+            autoRehide: try container.decode(Bool.self, forKey: .autoRehide),
+            rehideStrategyRawValue: try container.decode(Int.self, forKey: .rehideStrategyRawValue),
+            rehideInterval: try container.decode(TimeInterval.self, forKey: .rehideInterval)
+        )
     }
 }
 
@@ -267,6 +352,7 @@ struct Profile: Codable, Identifiable {
             showOnDoubleClick: Defaults.DefaultValue.showOnDoubleClick,
             showOnHover: Defaults.DefaultValue.showOnHover,
             showOnScroll: Defaults.DefaultValue.showOnScroll,
+            itemSpacingOffset: Defaults.DefaultValue.itemSpacingOffset,
             autoRehide: Defaults.DefaultValue.autoRehide,
             rehideStrategyRawValue: Defaults.DefaultValue.rehideStrategy.rawValue,
             rehideInterval: Defaults.DefaultValue.rehideInterval

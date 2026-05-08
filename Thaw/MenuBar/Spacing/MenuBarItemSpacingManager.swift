@@ -79,9 +79,9 @@ final class MenuBarItemSpacingManager {
     /// immediately, even though the first call is still mid-relaunch
     /// wave. With the semaphore the second caller queues behind the
     /// first; by the time it runs, the first call has completed and
-    /// applyActiveDisplaySpacing has already started a settling
-    /// period, so a subsequent applyProfileLayout correctly waits
-    /// for items to stabilize before moving them.
+    /// the spacing caller has already started a settling period, so a
+    /// subsequent applyProfileLayout correctly waits for items to
+    /// stabilize before moving them.
     private let applyOffsetSemaphore = SimpleSemaphore(value: 1)
 
     /// Runs a command with the given arguments.

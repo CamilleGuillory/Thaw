@@ -924,9 +924,9 @@ final class MenuBarItemManager: ObservableObject {
 
         // Boot race: a cold (performSetup) or expected-set settling must
         // not be torn down by a transient preflight that the boot path
-        // also kicks off (DisplaySettingsManager.applyActiveDisplaySpacing,
-        // ProfileManager.layoutTask). Preserve the merged expected set so
-        // a later non-preflight call still has it; otherwise return.
+        // also kicks off (ProfileManager.layoutTask). Preserve the merged
+        // expected set so a later non-preflight call still has it; otherwise
+        // return.
         if let existing = settlingKind,
            incomingKind == .preflight,
            existing == .cold || existing == .expectedSet
