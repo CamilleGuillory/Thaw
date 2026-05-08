@@ -127,7 +127,7 @@ final class MenuBarOverlayPanel: NSPanel, @unchecked Sendable {
         window.isExcludedFromWindowsMenu = true
         // Specifically NOT .stationary or .transient to allow movement.
         // .ignoresCycle and .fullScreenAuxiliary help hide the 'Thaw' label.
-        window.collectionBehavior = [.ignoresCycle, .fullScreenAuxiliary, .moveToActiveSpace]
+        window.collectionBehavior = [.ignoresCycle, .fullScreenAuxiliary]
         // Low enough for Mission Control to arrange (both axes move).
         // Positioned at screen center so MC grid displaces it in both x and y.
         window.level = .floating
@@ -164,7 +164,7 @@ final class MenuBarOverlayPanel: NSPanel, @unchecked Sendable {
         self.ignoresMouseEvents = true
         self.isExcludedFromWindowsMenu = true
         self.collectionBehavior = [
-            .fullScreenNone, .ignoresCycle, .moveToActiveSpace, .stationary,
+            .fullScreenNone, .ignoresCycle, .stationary,
         ]
         self.contentView = MenuBarOverlayPanelContentView()
         configureCancellables()
@@ -394,15 +394,6 @@ final class MenuBarOverlayPanel: NSPanel, @unchecked Sendable {
             }
         guard let appState else {
             diagLog.debug("No app state. \(actionMessage)")
-            return false
-        }
-        guard !appState.menuBarManager.isMenuBarHiddenBySystemUserDefaults
-        else {
-            diagLog.debug("Menu bar is hidden by system. \(actionMessage)")
-            return false
-        }
-        guard !appState.activeSpace.isFullscreen else {
-            diagLog.debug("Active space is fullscreen. \(actionMessage)")
             return false
         }
         guard
