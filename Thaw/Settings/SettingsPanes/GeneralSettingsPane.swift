@@ -285,11 +285,14 @@ struct GeneralSettingsPane: View {
 
     private func applyTempItemSpacingOffset() {
         isApplyingItemSpacingOffset = true
+        let previousOffset = settings.itemSpacingOffset
         settings.itemSpacingOffset = tempItemSpacingOffset
         Task {
             do {
                 try await appState.spacingManager.applyOffset()
             } catch {
+                settings.itemSpacingOffset = previousOffset
+                tempItemSpacingOffset = previousOffset
                 let alert = NSAlert(error: error)
                 alert.runModal()
             }

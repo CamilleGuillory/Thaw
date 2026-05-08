@@ -114,7 +114,9 @@ final class GeneralSettings: ObservableObject {
         Defaults.ifPresent(key: .showOnDoubleClick, assign: &showOnDoubleClick)
         Defaults.ifPresent(key: .showOnHover, assign: &showOnHover)
         Defaults.ifPresent(key: .showOnScroll, assign: &showOnScroll)
-        Defaults.ifPresent(key: .itemSpacingOffset, assign: &itemSpacingOffset)
+        if let rawSpacing = Defaults.object(forKey: .itemSpacingOffset) as? NSNumber {
+            itemSpacingOffset = Self.clampItemSpacingOffset(rawSpacing.doubleValue)
+        }
         Defaults.ifPresent(key: .autoRehide, assign: &autoRehide)
         Defaults.ifPresent(key: .rehideInterval, assign: &rehideInterval)
 
@@ -182,9 +184,10 @@ final class GeneralSettings: ObservableObject {
             .removeDuplicates()
             .receive(on: DispatchQueue.main)
             .sink { [weak appState, weak self] offset in
-                let clamped = max(-16, min(16, offset))
+                let clamped = Self.clampItemSpacingOffset(offset)
                 if clamped != offset {
                     self?.diagLog.warning("itemSpacingOffset \(offset) clamped to \(clamped)")
+                    self?.itemSpacingOffset = clamped
                 }
                 Defaults.set(clamped, forKey: .itemSpacingOffset)
                 appState?.spacingManager.offset = Int(clamped.rounded())
@@ -205,6 +208,10 @@ final class GeneralSettings: ObservableObject {
             .store(in: &c)
 
         cancellables = c
+    }
+
+    private static func clampItemSpacingOffset(_ value: Double) -> Double {
+        max(-16, min(16, value))
     }
 
     /// Handles settings changed externally via Settings URI scheme.
