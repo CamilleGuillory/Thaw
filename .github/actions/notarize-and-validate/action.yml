@@ -24,7 +24,6 @@ runs:
           --keychain-profile "notarytool-profile" \
           --keychain "$RUNNER_TEMP/buildagent.keychain" \
           --output-format json
-          --timeout 20m \
           --wait)
         echo "$submission"
 
